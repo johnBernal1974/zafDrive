@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:zafiro_conductor/src/Presentation/splash_page/View/splash_page.dart';
 import 'dart:async';
 import '../../../../Helpers/Validators/FormValidators.dart';
 import '../../../../providers/auth_provider.dart';
@@ -815,7 +816,7 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
                           _authProvider.signOut();
                           _controller.disconnect();
                           Navigator.pushReplacement(context,
-                              PageRouteBuilder(pageBuilder: (_, __, ___) => const LoginPage()));
+                              PageRouteBuilder(pageBuilder: (_, __, ___) => const SplashPage()));
                         }
                       } else {
                         if (currentContext.mounted) {
@@ -991,7 +992,7 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
         return AlertDialog(
           title: const Text("Optimización de batería"),
           content: const Text(
-              "Para que Tay-rona funcione correctamente en segundo plano, desactiva la optimización de batería. Debe estar sin restricciones "),
+              "Para que Zafiro funcione correctamente en segundo plano, desactiva la optimización de batería. Debe estar sin restricciones "),
           actions: <Widget>[
             ElevatedButton(
               child: const Text("Configuración"),

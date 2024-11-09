@@ -165,7 +165,6 @@ class DriverMapController{
     _statusSuscription.cancel();
     _driverInfoSuscription.cancel();
     _connectivitySubscription?.cancel();
-    _statusSuscription.cancel();
   }
 
   void onMapCreated(GoogleMapController controller){

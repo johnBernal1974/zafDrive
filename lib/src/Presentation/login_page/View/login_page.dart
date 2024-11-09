@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../../../../providers/conectivity_service.dart';
@@ -23,167 +24,195 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-
     _controller = LoginController();
+    checkIfUserIsLoggedLoginPage();
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
       _controller.init(context);
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      key: _controller.key,
-      appBar: AppBar( backgroundColor: blancoCards,
-        iconTheme: const IconThemeData(color: negro, size: 30),
-        title: headerText(
-            text: "Login",
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
-            color: negro
-        ),
-        actions:  <Widget>[
-          Container(
-            margin: const EdgeInsets.only(right: 15),
-            child: const Image(
-                width: 80.0,
-                image: AssetImage('assets/images/logo_zafiro-pequeño.png')),
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.only(bottom: 45, left: 30, right: 30, top: 45),
-              child: headerText(
-                  text: "Ingresa tu correo y contraseña\npara iniciar sesión",
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: negroLetras),
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 25, right: 25),
-              child: Column(
-                children: [
-                  _emailImput(),
-                  _passwordImput(),
-                ],
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(top: 30, left: 25, right: 25),
-              child: createElevatedButton(
-                context: context,
-                labelButton: 'Ingresar',
-                labelFontSize: 20,
-                color: primary,
-                icon: null,
-                func: () async {
-                  // Ocultar el teclado
-                  FocusScope.of(context).unfocus();
-                  setState(() {
-                    _isLoading = true; // Iniciar el estado de carga
-                  });
+ @override
+ Widget build(BuildContext context) {
+   return StreamBuilder<User?>(
+     stream: FirebaseAuth.instance.authStateChanges(), // Escucha el estado de autenticación
+     builder: (context, snapshot) {
+       // Esperamos hasta que se determine si el usuario está autenticado
+       if (snapshot.connectionState == ConnectionState.waiting) {
+         return const Scaffold(
+           body: Center(child: CircularProgressIndicator(
+             color: gris,
+           )), // Indicador mientras se espera el estado
+         );
+       }
 
-                  // Verificar la conexión a Internet antes de ejecutar la acción
-                  bool hasConnection = await connectionService.hasInternetConnection();
+       // Si el usuario está logueado, redirige a la pantalla "antes_iniciar"
+       if (snapshot.hasData) {
+         WidgetsBinding.instance.addPostFrameCallback((_) {
+           Navigator.pushNamedAndRemoveUntil(context, "antes_iniciar", (route) => false);
+         });
+         return SizedBox(); // Un widget vacío mientras redirige
+       }
 
-                  setState(() {
-                    _isLoading = false; // Terminar el estado de carga
-                  });
+       // Si no está logueado, muestra la pantalla de login
+       return Scaffold(
+         key: _controller.key,
+         appBar: AppBar(
+           backgroundColor: blancoCards,
+           iconTheme: const IconThemeData(color: negro, size: 30),
+           title: headerText(
+             text: "Login",
+             fontSize: 26,
+             fontWeight: FontWeight.w700,
+             color: negro,
+           ),
+           actions: <Widget>[
+             Container(
+               margin: const EdgeInsets.only(right: 15),
+               child: const Image(
+                 width: 80.0,
+                 image: AssetImage('assets/images/logo_zafiro-pequeño.png'),
+               ),
+             ),
+           ],
+         ),
+         body: SingleChildScrollView(
+           child: Column(
+             children: [
+               Container(
+                 margin: const EdgeInsets.only(bottom: 45, left: 30, right: 30, top: 45),
+                 child: headerText(
+                   text: "Ingresa tu correo y contraseña\npara iniciar sesión",
+                   fontSize: 18,
+                   fontWeight: FontWeight.w500,
+                   color: negroLetras,
+                 ),
+               ),
+               Container(
+                 margin: const EdgeInsets.only(left: 25, right: 25),
+                 child: Column(
+                   children: [
+                     _emailImput(),
+                     _passwordImput(),
+                   ],
+                 ),
+               ),
+               Container(
+                 margin: const EdgeInsets.only(top: 30, left: 25, right: 25),
+                 child: createElevatedButton(
+                   context: context,
+                   labelButton: 'Ingresar',
+                   labelFontSize: 20,
+                   color: primary,
+                   icon: null,
+                   func: () async {
+                     // Ocultar el teclado
+                     FocusScope.of(context).unfocus();
+                     setState(() {
+                       _isLoading = true; // Iniciar el estado de carga
+                     });
 
-                  if (hasConnection) {
-                    // Si hay conexión, ejecuta la acción de login
-                    _controller.login();
-                  } else {
-                    // Si no hay conexión, muestra un AlertDialog
-                    alertSinInternet();
-                  }
-                },
-              ),
-            ),
+                     // Verificar la conexión a Internet antes de ejecutar la acción
+                     bool hasConnection = await connectionService.hasInternetConnection();
 
-            Center(
-              child: Column(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 35.0),
-                    child: GestureDetector(
-                      onTap: () async {
-                        // Verificar conexión a Internet antes de ejecutar la acción
-                        bool hasConnection = await connectionService.hasInternetConnection();
+                     setState(() {
+                       _isLoading = false; // Terminar el estado de carga
+                     });
 
-                        if (hasConnection) {
-                          // Si hay conexión, ejecuta la acción de ir a "Olvidaste tu contraseña"
-                          _controller.goToForgotPassword();
-                        } else {
-                          // Si no hay conexión, muestra un AlertDialog
-                          alertSinInternet();
-                        }
-                      },
-                      child: const Text(
-                        '¿Olvidaste tu contraseña?',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 17.0,
-                        ),
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, 'sign_up');
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 25.0, bottom: 30),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Text(
-                              '¿No tienes una cuenta?', style: TextStyle(
-                              color: negroLetras,
-                              fontWeight: FontWeight.w400,
-                              fontSize: 15.0
-                          )),
-                          GestureDetector(
-                            onTap: () async {
-                              // Verificar conexión a Internet antes de ejecutar la acción
-                              bool hasConnection = await connectionService.hasInternetConnection();
+                     if (hasConnection) {
+                       // Si hay conexión, ejecuta la acción de login
+                       _controller.login();
+                     } else {
+                       // Si no hay conexión, muestra un AlertDialog
+                       alertSinInternet();
+                     }
+                   },
+                 ),
+               ),
+               Center(
+                 child: Column(
+                   children: [
+                     Container(
+                       margin: const EdgeInsets.only(top: 35.0),
+                       child: GestureDetector(
+                         onTap: () async {
+                           // Verificar conexión a Internet antes de ejecutar la acción
+                           bool hasConnection = await connectionService.hasInternetConnection();
 
-                              if (hasConnection) {
-                                // Si hay conexión, ejecuta la acción para ir a la selección de tipo de usuario
-                                _controller.goToSelectTypeUser();
-                              } else {
-                                // Si no hay conexión, muestra un AlertDialog
-                                alertSinInternet();
-                              }
-                            },
-                            child: const Text(
-                              '  Registrarse aquí',
-                              style: TextStyle(
-                                color: primary,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16.0,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+                           if (hasConnection) {
+                             // Si hay conexión, ejecuta la acción de ir a "Olvidaste tu contraseña"
+                             _controller.goToForgotPassword();
+                           } else {
+                             // Si no hay conexión, muestra un AlertDialog
+                             alertSinInternet();
+                           }
+                         },
+                         child: const Text(
+                           '¿Olvidaste tu contraseña?',
+                           style: TextStyle(
+                             color: Colors.black,
+                             fontWeight: FontWeight.w600,
+                             fontSize: 17.0,
+                           ),
+                         ),
+                       ),
+                     ),
+                     GestureDetector(
+                       onTap: () {
+                         Navigator.pushNamed(context, 'sign_up');
+                       },
+                       child: Container(
+                         margin: const EdgeInsets.only(top: 25.0, bottom: 30),
+                         child: Row(
+                           mainAxisAlignment: MainAxisAlignment.center,
+                           crossAxisAlignment: CrossAxisAlignment.center,
+                           children: [
+                             const Text(
+                               '¿No tienes una cuenta?',
+                               style: TextStyle(
+                                 color: negroLetras,
+                                 fontWeight: FontWeight.w400,
+                                 fontSize: 15.0,
+                               ),
+                             ),
+                             GestureDetector(
+                               onTap: () async {
+                                 // Verificar conexión a Internet antes de ejecutar la acción
+                                 bool hasConnection = await connectionService.hasInternetConnection();
 
-  Future alertSinInternet (){
+                                 if (hasConnection) {
+                                   // Si hay conexión, ejecuta la acción para ir a la selección de tipo de usuario
+                                   _controller.goToSelectTypeUser();
+                                 } else {
+                                   // Si no hay conexión, muestra un AlertDialog
+                                   alertSinInternet();
+                                 }
+                               },
+                               child: const Text(
+                                 '  Registrarse aquí',
+                                 style: TextStyle(
+                                   color: primary,
+                                   fontWeight: FontWeight.w500,
+                                   fontSize: 16.0,
+                                 ),
+                               ),
+                             ),
+                           ],
+                         ),
+                       ),
+                     ),
+                   ],
+                 ),
+               ),
+             ],
+           ),
+         ),
+       );
+     },
+   );
+ }
+
+
+ Future alertSinInternet (){
    return showDialog(
      context: context,
      builder: (BuildContext context) {
@@ -201,6 +230,15 @@ class _LoginPageState extends State<LoginPage> {
        );
      },
    );
+ }
+
+ void checkIfUserIsLoggedLoginPage(){
+   FirebaseAuth.instance.authStateChanges().listen((User? user) {
+     if(user != null){
+       print("**********el usuario ya esta logueado, pasa a antes de iniciar");
+       Navigator.pushNamedAndRemoveUntil(context, "antes_iniciar", (route) => false);
+     }
+   });
  }
 
   Widget _emailImput() {
