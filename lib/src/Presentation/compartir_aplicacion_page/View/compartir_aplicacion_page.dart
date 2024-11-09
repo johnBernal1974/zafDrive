@@ -1,0 +1,195 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart'; // Importa el paquete
+import '../../../colors/colors.dart';
+import '../../commons_widgets/headers/header_text/header_text.dart';
+
+class CompartirAplicacionpage extends StatelessWidget {
+  const CompartirAplicacionpage({super.key});
+
+  Future<String?> _getLinkFromFirestore(String field) async {
+    try {
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Prices')
+          .doc('info')
+          .get();
+      return snapshot[field] as String?;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error obteniendo el enlace de Firestore: $e");
+      }
+      return null;
+    }
+  }
+
+  void _shareAppLinkViaWhatsAppDriver(BuildContext context, String link) async {
+    String message = "¡Ingresando a este enlace podrás descargar Zafiro Conductor! $link";
+    final Uri uri = Uri.parse("https://wa.me/?text=${Uri.encodeComponent(message)}");
+
+    try {
+      await launchUrl(uri);
+    } catch (e) {
+      if(context.mounted){
+        _showNoWhatsAppInstalledDialog(context);
+      }
+    }
+  }
+
+  void _shareAppLinkViaWhatsAppClient(BuildContext context, String link) async {
+    String message = "¡Ingresando a este enlace podrás descargar Zafiro Cliente! $link";
+    final Uri uri = Uri.parse("https://wa.me/?text=${Uri.encodeComponent(message)}");
+
+    try {
+      await launchUrl(uri);
+    } catch (e) {
+      if(context.mounted){
+        _showNoWhatsAppInstalledDialog(context);
+      }
+    }
+  }
+
+
+  void _showNoWhatsAppInstalledDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'WhatsApp no instalado',
+            style: TextStyle(fontSize: 18.r, fontWeight: FontWeight.w800),
+          ),
+          content: Text(
+            'No tienes WhatsApp en tu dispositivo. Instálalo e intenta de nuevo',
+            style: TextStyle(fontSize: 14.r),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Aceptar',
+                style: TextStyle(color: negro, fontWeight: FontWeight.w900, fontSize: 14.r),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ScreenUtil.init(context, designSize: const Size(375, 812));
+    return Scaffold(
+      backgroundColor: blancoCards,
+      appBar: AppBar(
+        backgroundColor: blancoCards,
+        iconTheme: IconThemeData(color: negro, size: 26.r),
+        title: headerText(
+          text: "Compartir aplicación",
+          fontSize: 20.r,
+          fontWeight: FontWeight.w700,
+          color: negro,
+        ),
+      ),
+      body: Container(
+        padding: EdgeInsets.all(25.r),
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            headerText(
+              text: 'Comparte Zafiro con tus amigos, familiares y personas queridas, para que vayan más allá de lo común.',
+              fontSize: 16.r,
+              fontWeight: FontWeight.w600,
+              color: negro,
+            ),
+            const Divider(color: grisMedio),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    String? linkClient = await _getLinkFromFirestore('link_descarga_client');
+                    if (linkClient != null) {
+                      if(context.mounted){
+                        _shareAppLinkViaWhatsAppClient(context, linkClient);
+                      }
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.only(left: 15.r, top: 15.r, right: 15.r),
+                            child: Image(
+                              height: 50.r,
+                              width: 50.r,
+                              image: const AssetImage('assets/images/logo_compartir_zafiro.png'),
+                            ),
+                          ),
+                          const Image(
+                            height: 35.0,
+                            width: 35.0,
+                            image: AssetImage('assets/images/icono_compartir_circular.png'),
+                          ),
+                        ],
+                      ),
+                      headerText(
+                        text: 'Cliente',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: negroLetras,
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    String? linkDriver = await _getLinkFromFirestore('link_descarga_driver');
+                    if (linkDriver != null) {
+                      if(context.mounted){
+                        _shareAppLinkViaWhatsAppDriver(context, linkDriver);
+                      }
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.only(left: 15.r, top: 15.r, right: 15.r),
+                            child: Image(
+                              height: 50.r,
+                              width: 50.r,
+                              image: const AssetImage('assets/images/logo_compartir_zafiro_conductor2.png'),
+                            ),
+                          ),
+                          Image(
+                            height: 35.r,
+                            width: 35.r,
+                            image: const AssetImage('assets/images/icono_compartir_circular.png'),
+                          ),
+                        ],
+                      ),
+                      headerText(
+                        text: 'Conductor',
+                        fontSize: 12.r,
+                        fontWeight: FontWeight.w700,
+                        color: negroLetras,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+}

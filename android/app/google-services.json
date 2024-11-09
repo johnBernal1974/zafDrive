@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "776719847961",
+    "project_id": "transport-f7c79",
+    "storage_bucket": "transport-f7c79.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:776719847961:android:775717916c8ad20c2a5088",
+        "android_client_info": {
+          "package_name": "com.zafiro_cliente"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASx4Osx-gpV0qPm2mmDOtnkdHULXNmWYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:776719847961:android:cfb3a542f8f258e82a5088",
+        "android_client_info": {
+          "package_name": "com.zafiro_conductor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASx4Osx-gpV0qPm2mmDOtnkdHULXNmWYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
