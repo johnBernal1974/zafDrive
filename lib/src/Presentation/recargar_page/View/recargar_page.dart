@@ -35,8 +35,6 @@ class _RecargarPageState extends State<RecargarPage> {
         // Acceder al campo 'numero_cuenta_recargas' que contiene el número
         var numeroCuentaRecargas = docSnapshot['numero_cuenta_recargas'];
         var whatsappParaRecargas = docSnapshot['whatsappRecargas'];
-        print("******************Este es el numero de cuenta para recargas*******$numeroCuentaRecargas");
-        print("******************Este es el whatsApp para recargas*******$whatsappParaRecargas");
 
         if (numeroCuentaRecargas != null) {
           setState(() {
@@ -46,7 +44,9 @@ class _RecargarPageState extends State<RecargarPage> {
         }
       }
     } catch (e) {
-      print('Error al obtener el número de WhatsApp: $e');
+      if (kDebugMode) {
+        print('Error al obtener el número de WhatsApp: $e');
+      }
     }
   }
 
