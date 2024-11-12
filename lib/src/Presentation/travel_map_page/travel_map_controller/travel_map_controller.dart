@@ -34,7 +34,7 @@ import '../../../models/prices.dart';
 import '../../commons_widgets/bottom_sheets/bottom_sheet_client_info.dart';
 import '../../map_driver_page/View/map_driver_page.dart';
 
-class TravelMapController{
+class TravelMapController with WidgetsBindingObserver{
   late BuildContext context;
   late Function refresh;
   bool isMoto = false;
@@ -69,22 +69,17 @@ class TravelMapController{
   late TravelInfoProvider _travelInfoProvider;
   late BitmapDescriptor fromMarker;
   late BitmapDescriptor toMarker;
-
   bool showDriverOnTheWayButton = false; //pickup client
   bool showNotifiedUserButton = false;
   bool showStartTravelButton = false;
   bool showFinishTravelButton = false;
   int _remainingTimeInSeconds = 60; // Iniciar el temporizador en 5 minutos (5 * 60 segundos)
   Timer? _timer; // Variable para almacenar el temporizador
-
-
-
   double mts = 0;
   double kms = 0;
   double mtsSuma = 0;
   String? distanciaTotal;
   double kmsTotal = 0;
-
   Driver? driver;
   Client? client;
   String? _idTravel;
@@ -92,7 +87,6 @@ class TravelMapController{
   String? distancia;
   String? distanciaTotalString;
   String? navegadorSelecionado;
-
   Set<Polyline> polylines ={};
   List<LatLng> points = List.from([]);
   TravelInfo? travelInfo;
@@ -112,16 +106,17 @@ class TravelMapController{
   String? rolUsuario;
   String? rol = '';
   Marker? currentMarker;
-
   //Para verificacion de internet
   final ConnectionService _connectionService = ConnectionService();
   bool isConnected = false; //**para validar el estado de conexion a internet
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;  // Suscripción para escuchar cambios en conectividad
+  GoogleMapController? _googleMapController;
 
 
   Future? init (BuildContext context, Function refresh) async {
     this.context = context;
     this.refresh = refresh;
+    WidgetsBinding.instance.addObserver(this);
     _idTravel = ModalRoute.of(context)?.settings.arguments as String;
     _geofireProvider = GeofireProvider();
     _authProvider = MyAuthProvider();
@@ -158,6 +153,8 @@ class TravelMapController{
     }
   }
 
+
+
   // Método para verificar la conexión a Internet y mostrar el Snackbar si no hay conexión
   Future<void> checkConnectionAndShowSnackbar() async {
     await _connectionService.checkConnectionAndShowSnackbar(context, () {
@@ -171,6 +168,8 @@ class TravelMapController{
     _driverInfoSuscription.cancel();
     _streamStatusController.cancel();
     _connectivitySubscription?.cancel();
+    _googleMapController?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
   }
 
   void saveLocation() async {
@@ -1202,20 +1201,23 @@ class TravelMapController{
   }
 
   void onMapCreated(GoogleMapController controller){
+    _googleMapController = controller;
+    if (!_mapController.isCompleted) {
+      _mapController.complete(controller);
+    }
     controller.setMapStyle(utilsMap.mapStyle);
     _mapController.complete(controller);
   }
 
-  Future? animateCameraToPosition(double latitude, double longitude)  async {
-    GoogleMapController controller = await _mapController.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(
-            bearing: 0,
-            target: LatLng(latitude,longitude),
-            zoom: 17.3
-        )
-      )
-    );
+  Future<void> animateCameraToPosition(double latitude, double longitude) async {
+    if (_googleMapController == null) return;
+    _googleMapController!.animateCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(
+        bearing: 0,
+        target: LatLng(latitude, longitude),
+        zoom: 15.3,
+      ),
+    ));
   }
 
   Future? animateCameraToPositionCenterPosition(double latitude, double longitude)  async {
@@ -1224,7 +1226,7 @@ class TravelMapController{
         CameraPosition(
             bearing: 0,
             target: LatLng(latitude,longitude),
-            zoom: 15.3
+            zoom: 14
         )
     )
     );

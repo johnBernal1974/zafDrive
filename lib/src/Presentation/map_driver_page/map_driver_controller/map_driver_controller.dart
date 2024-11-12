@@ -29,7 +29,7 @@ import 'package:zafiro_conductor/providers/geofire_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 
-class DriverMapController{
+class DriverMapController with WidgetsBindingObserver{
   late BuildContext context;
   late Function refresh;
   bool isMoto = false;
@@ -40,6 +40,7 @@ class DriverMapController{
   double tarifa= 0;
   double? radioBusqueda;
   final String _yourGoogleAPIKey = dotenv.get('API_KEY');
+  GoogleMapController? _googleMapController;
 
 
   CameraPosition initialPosition = const CameraPosition(
@@ -80,6 +81,8 @@ class DriverMapController{
     this.context = context;
     this.refresh = refresh;
 
+    WidgetsBinding.instance.addObserver(this);
+
     // Inicialización de proveedores
     _geofireProvider = GeofireProvider();
     _authProvider = MyAuthProvider();
@@ -101,6 +104,7 @@ class DriverMapController{
     await checkAndRequestLocationPermission();
     checkGPS();
 
+
     // Verificación de conexión a Internet y configuración de escucha de cambios
     await checkConnectionAndShowSnackbar();
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
@@ -110,18 +114,139 @@ class DriverMapController{
 
     // Obtener información del conductor
     getDriverInfo();
+    _initializeMap();
+    obtenerDatosPrice();
+  }
 
-    // Obtener posición actual y configurar la posición inicial de la cámara
+  // Método para inicializar el mapa y obtener la posición
+  void _initializeMap() async {
     _position = await Geolocator.getCurrentPosition();
     initialPosition = CameraPosition(
       target: LatLng(_position.latitude, _position.longitude),
       zoom: 20.0,
     );
+    addMarker('driver', _position.latitude, _position.longitude, 'Tu posición', '', markerDriver);
+    refresh();
+  }
 
-    // Obtener datos de precios
-    obtenerDatosPrice();
+
+  void dispose(){
+    _positionStream.cancel();
+    _statusSuscription.cancel();
+    _driverInfoSuscription.cancel();
+    _connectivitySubscription?.cancel();
+    _googleMapController?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
 
   }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Detectar cuándo la app vuelve a primer plano para refrescar el mapa
+    if (state == AppLifecycleState.resumed) {
+      if (_googleMapController != null) {
+        // Redibuja la posición y marcadores cuando la app vuelve a primer plano
+        animateCameraToPosition(_position.latitude, _position.longitude);
+      }
+    }
+  }
+
+  void onMapCreated(GoogleMapController controller){
+    _googleMapController = controller;
+    if (!_mapController.isCompleted) {
+      _mapController.complete(controller);
+    }
+    controller.setMapStyle(utilsMap.mapStyle);
+    _mapController.complete(controller);
+  }
+
+  void updateLocation() async {
+    try {
+      await _determinePosition();
+      _position = (await Geolocator.getLastKnownPosition())!;
+      centerPosition();
+
+      // Asegúrate de que el rol esté cargado antes de continuar
+      rol = await obtenerRol();  // Espera a que se obtenga el rol
+
+      if (rol == null) {
+        if (kDebugMode) {
+          print('No se pudo obtener el rol. Deteniendo updateLocation.');
+        }
+        return;  // Detiene la ejecución si no hay rol disponible
+      }
+
+      saveLocation();
+      refresh();
+
+      _positionStream = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 2,
+        ),
+      ).listen((Position position) {
+        _position = position;
+
+        // Usa el rol para determinar qué marcador agregar
+        if (rol == 'moto') {
+          addMarker(
+            'driver',
+            _position.latitude,
+            _position.longitude,
+            "Tu posición", "",
+            markerMotorcycler,
+          );
+        } else {
+          addMarker(
+            'driver',
+            _position.latitude,
+            _position.longitude,
+            "Tu posición", "",
+            markerDriver,
+          );
+        }
+
+        animateCameraToPosition(_position.latitude, _position.longitude);
+        saveLocation();
+        refresh();
+      });
+
+      _positionStream.onError((error) {
+        if (kDebugMode) {
+          print('Error en el stream de posición: $error');
+        }
+      });
+    } catch (error) {
+      if (kDebugMode) {
+        print('Error en la localización: $error');
+      }
+    }
+  }
+
+  Future<void> animateCameraToPosition(double latitude, double longitude) async {
+    if (_googleMapController == null) return;
+    _googleMapController!.animateCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(
+        bearing: 0,
+        target: LatLng(latitude, longitude),
+        zoom: 14,
+      ),
+    ));
+  }
+
+  Future? animateCameraToPositionCenterPosition(double latitude, double longitude)  async {
+    GoogleMapController controller = await _mapController.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(
+            bearing: 0,
+            target: LatLng(latitude,longitude),
+            zoom: 15.3
+        )
+    )
+    );
+  }
+
+
 
   Future<void> checkAndRequestLocationPermission() async {
     await LocationPermissionManager.checkAndRequestLocationPermission(context);
@@ -160,17 +285,6 @@ class DriverMapController{
     }
   }
 
-  void dispose(){
-    _positionStream.cancel();
-    _statusSuscription.cancel();
-    _driverInfoSuscription.cancel();
-    _connectivitySubscription?.cancel();
-  }
-
-  void onMapCreated(GoogleMapController controller){
-    controller.setMapStyle(utilsMap.mapStyle);
-    _mapController.complete(controller);
-  }
 
   void saveLocation() async {
     User? user = _authProvider.getUser();
@@ -253,76 +367,13 @@ class DriverMapController{
         isConected = false;
         _driverProvider.updateIsActiveAFalse(_authProvider.getUser()!.uid);
       }
-     refresh();
-    });
-  }
-
-  void updateLocation() async {
-    try {
-      await _determinePosition();
-      _position = (await Geolocator.getLastKnownPosition())!;
-      centerPosition();
-
-      // Asegúrate de que el rol esté cargado antes de continuar
-      rol = await obtenerRol();  // Espera a que se obtenga el rol
-
-      if (rol == null) {
-        if (kDebugMode) {
-          print('No se pudo obtener el rol. Deteniendo updateLocation.');
-        }
-        return;  // Detiene la ejecución si no hay rol disponible
-      }
-
-      saveLocation();
       refresh();
-
-      _positionStream = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 2,
-        ),
-      ).listen((Position position) {
-        _position = position;
-
-        // Usa el rol para determinar qué marcador agregar
-        if (rol == 'moto') {
-          addMarker(
-            'driver',
-            _position.latitude,
-            _position.longitude,
-            "Tu posición", "",
-            markerMotorcycler,
-          );
-        } else {
-          addMarker(
-            'driver',
-            _position.latitude,
-            _position.longitude,
-            "Tu posición", "",
-            markerDriver,
-          );
-        }
-
-        animateCameraToPosition(_position.latitude, _position.longitude);
-        saveLocation();
-        refresh();
-      });
-
-      _positionStream.onError((error) {
-        if (kDebugMode) {
-          print('Error en el stream de posición: $error');
-        }
-      });
-    } catch (error) {
-      if (kDebugMode) {
-        print('Error en la localización: $error');
-      }
-    }
+    });
   }
 
 
   void centerPosition(){
-    animateCameraToPosition (_position.latitude, _position.longitude);
+    animateCameraToPositionCenterPosition (_position.latitude, _position.longitude);
   }
 
   void checkGPS() async{
@@ -421,18 +472,6 @@ class DriverMapController{
           'Location permissions are permanently denied, we cannot request permissions.');
     }
     return await Geolocator.getCurrentPosition();
-  }
-
-  Future? animateCameraToPosition(double latitude, double longitude)  async {
-    GoogleMapController controller = await _mapController.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(
-            bearing: 0,
-            target: LatLng(latitude,longitude),
-            zoom: 14
-        )
-      )
-    );
   }
 
   Future<BitmapDescriptor> createMarkerImageFromAssets(String path) async {
@@ -606,10 +645,26 @@ class DriverMapController{
     TravelInfo? travelInfo = await _travelInfoProvider.getById(documentId);
     String? idDriver = travelInfo?.idDriver;
     String? idCurrentDriver = _authProvider.getUser()?.uid;
-    // Verificar si el objeto travelInfo no es nulo y si el estado ya ha sido aceptado
-    if (travelInfo != null && travelInfo.status == 'accepted') {
+
+    // Verificar si el objeto travelInfo no es nulo y si el idDriver está vacío
+    if (travelInfo != null && (idDriver == null || idDriver.isEmpty)) {
+      // Si el idDriver está vacío, proceder con la lógica de aceptación
+      Map<String, dynamic> data = {
+        'idDriver': idCurrentDriver,
+        'status': 'accepted',
+      };
+      // Actualizar el documento en Firestore
+      await _travelInfoProvider.update(data, documentId);
+      await _geofireProvider.delete(idCurrentDriver!);
+      actualizarEstadoIsWorkingTrue();
+      guardarUltimoCliente();
+      _driverProvider.updateIsActiveAFalse(idCurrentDriver);
+      // Redirigir a la página del mapa de viajes
+      goToTravelMapPage();
+
+    } else if (travelInfo != null && travelInfo.status == 'accepted') {
+      // Si el estado ya es 'accepted' y otro conductor aceptó el viaje
       if(idDriver != idCurrentDriver){
-        // Mostrar un mensaje de advertencia al conductor
         if(context.mounted){
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -619,20 +674,6 @@ class DriverMapController{
           );
         }
       }
-    } else if (travelInfo != null) {
-      // Si el servicio no ha sido aceptado, proceder con la lógica de aceptación
-      Map<String, dynamic> data = {
-        'idDriver': _authProvider.getUser()!.uid,
-        'status': 'accepted',
-      };
-      // Actualizar el documento en Firestore
-      _travelInfoProvider.update(data, documentId);
-      _geofireProvider.delete(_authProvider.getUser()!.uid);
-      actualizarEstadoIsWorkingTrue();
-      guardarUltimoCliente();
-      _driverProvider.updateIsActiveAFalse(_authProvider.getUser()!.uid);
-      // Redirigir a la página del mapa de viajes
-      goToTravelMapPage();
     } else {
       // Si travelInfo es nulo, significa que no se encontró el viaje
       if(context.mounted){
@@ -645,6 +686,7 @@ class DriverMapController{
       }
     }
   }
+
 
   void actualizarEstadoIsWorkingTrue () async {
     Map<String, dynamic> data = {

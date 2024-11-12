@@ -689,67 +689,36 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
   Widget _saldoRecarga() {
     return Container(
       width: double.infinity,
-      color: grisMapa,
+      color: primary.withOpacity(0.2),
       padding: const EdgeInsets.symmetric(vertical: 15), // Padding vertical para darle espacio
       child: Center(
-        child: Container(
-          height: 35,
-          width: 200, // Este ancho es específico para el contenedor del saldo
-          decoration: BoxDecoration(
-            boxShadow: const [
-              BoxShadow(
-                offset: Offset(0.0, 7.0),
-                blurRadius: 18,
-                color: gris,
-              )
-            ],
-            color: blanco,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                height: 35,
-                width: 80,
-                decoration: const BoxDecoration(
-                  color: primary,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(22),
-                    topLeft: Radius.circular(22),
-                    bottomRight: Radius.circular(200),
-                  ),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Saldo',
-                    style: TextStyle(
-                      color: blanco,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center, // Centrar los elementos
+          children: <Widget>[
+            // Muestra el texto "Saldo" y el valor del saldo sin ningún tipo de contenedor adicional
+            const Text(
+              'Tu Saldo: ', // Texto estático para "Saldo"
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black, // Color de texto en negro
               ),
-              Container(
-                alignment: Alignment.center,
-                margin: const EdgeInsets.only(left: 10),
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: DefaultTextStyle(
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: negro,
-                  ),
-                  child: Text(formattedSaldo ?? ''),
-                ),
+            ),
+            const SizedBox(width: 5), // Espaciado entre el texto "Saldo" y el valor
+            Text(
+              formattedSaldo ?? '', // Muestra el saldo formateado
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: Colors.black, // Color de texto en negro
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+
 
   Widget _buttonDrawer() {
     return GestureDetector(
