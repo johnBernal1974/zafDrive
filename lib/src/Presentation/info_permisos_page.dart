@@ -15,6 +15,12 @@ class _InfoPermisosPageState extends State<InfoPermisosPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
+  void initState() {
+    ponerVistopermisosentrue();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false, // Deshabilita el botón de "Atrás"
@@ -208,5 +214,29 @@ class _InfoPermisosPageState extends State<InfoPermisosPage> {
         ),
       ),
     );
+  }
+
+  void ponerVistopermisosentrue() async{
+    String? uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      // Actualizar la base de datos
+      try {
+        await _firestore.collection('Drivers').doc(uid).update({
+          'info_permisos': true,
+        });
+      } catch (e) {
+        // Manejo de errores
+        if(context.mounted){
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al actualizar la base de datos: $e')),
+          );
+        }
+      }
+    } else {
+      // Manejo de error si no hay usuario logueado
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay usuario autenticado.')),
+      );
+    }
   }
 }
