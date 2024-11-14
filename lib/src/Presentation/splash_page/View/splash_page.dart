@@ -56,7 +56,7 @@ class _SplashPageState extends State<SplashPage> {
                     width: 220.0,
                     image: AssetImage('assets/images/logo_zafiro-pequeño.png')
                 ),
-                Text('Conductores', style: TextStyle(fontWeight: FontWeight.w900, color: primary,fontSize: 26),)
+                Text('Conductores', style: TextStyle(fontWeight: FontWeight.w900, color: negro,fontSize: 26),)
               ],
             ),
           ),

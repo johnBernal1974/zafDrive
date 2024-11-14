@@ -127,4 +127,5 @@ Future<String> _getStatus(String userId) async {
     print("Error al obtener el estado del conductor: $e");
     return 'driver_available'; // Devuelve un estado predeterminado en caso de error
   }
+
 }

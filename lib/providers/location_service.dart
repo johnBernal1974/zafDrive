@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:workmanager/workmanager.dart';
 
 class LocationService {
   Stream<LatLng>? locationStream;
@@ -21,7 +22,8 @@ class LocationService {
 
   // Método para detener la escucha de cambios en la ubicación
   void stopListeningToLocation() {
-    locationStream = null; // Detener la escucha
+    locationStream = null;
+    Workmanager().cancelAll();
   }
 
   // Método para obtener la ubicación actual en el momento de la llamada
