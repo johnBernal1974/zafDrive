@@ -5,7 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:zafiro_conductor/src/Presentation/travel_map_page/travel_map_controller/travel_map_controller.dart';
+import 'package:zafiro_conductores/src/Presentation/travel_map_page/travel_map_controller/travel_map_controller.dart';
 import '../../../../providers/conectivity_service.dart';
 import '../../../colors/colors.dart';
 

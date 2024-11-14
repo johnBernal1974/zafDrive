@@ -1,9 +1,9 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:zafiro_conductor/src/Presentation/map_driver_page/View/map_driver_page.dart';
+import 'package:zafiro_conductores/src/Presentation/map_driver_page/View/map_driver_page.dart';
 import '../../../../providers/auth_provider.dart';
-import 'package:zafiro_conductor/src/models/client.dart';
+import 'package:zafiro_conductores/src/models/client.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../providers/client_provider.dart';

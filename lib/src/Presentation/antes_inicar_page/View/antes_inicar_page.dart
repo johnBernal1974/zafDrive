@@ -3,14 +3,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
-import 'package:zafiro_conductor/src/Presentation/splash_page/View/splash_page.dart';
 import '../../../../Helpers/SnackBar/snackbar.dart';
 import '../../../../Helpers/Validators/FormValidators.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/conectivity_service.dart';
 import '../../../colors/colors.dart';
 import '../../commons_widgets/headers/header_text/header_text.dart';
-import '../../login_page/View/login_page.dart';
+import '../../splash_page/View/splash_page.dart';
 import '../antes_iniciar_controller/antes_iniciar_controller.dart';
 
 class AntesIniciarPage extends StatefulWidget {

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:zafiro_conductor/src/Presentation/take_foto_perfil/take_foto_perfil_controller/take_foto_perfil_controller.dart';
+import 'package:zafiro_conductores/src/Presentation/take_foto_perfil/take_foto_perfil_controller/take_foto_perfil_controller.dart';
 import '../../../providers/conectivity_service.dart';
 import '../../colors/colors.dart';
 import '../commons_widgets/headers/header_text/header_text.dart';

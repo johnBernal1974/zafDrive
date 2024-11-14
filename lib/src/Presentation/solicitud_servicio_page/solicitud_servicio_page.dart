@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
-import 'package:zafiro_conductor/src/Presentation/solicitud_servicio_page/solicitud_servicio_controller/solicitud_servicio_controller.dart';
-import 'package:zafiro_conductor/src/colors/colors.dart';
+import 'package:zafiro_conductores/src/Presentation/solicitud_servicio_page/solicitud_servicio_controller/solicitud_servicio_controller.dart';
+import 'package:zafiro_conductores/src/colors/colors.dart';
 import '../commons_widgets/headers/header_text/header_text.dart';
 
 class SolicitudDeServicioPage extends StatefulWidget {

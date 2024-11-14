@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../src/colors/colors.dart';
 import 'driver_provider.dart';
-import 'package:zafiro_conductor/src/models/driver.dart';
+import 'package:zafiro_conductores/src/models/driver.dart';
 
 class MyAuthProvider {
   late FirebaseAuth _firebaseAuth;

@@ -10,7 +10,7 @@ import '../../../../Helpers/My_progress_dialog/myProgressDialog.dart';
 import '../../../../Helpers/SnackBar/snackbar.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/driver_provider.dart';
-import 'package:zafiro_conductor/src/models/driver.dart';
+import 'package:zafiro_conductores/src/models/driver.dart';
 
 class SignUpController{
 

@@ -1,4 +1,4 @@
-package com.zafiro_conductor;
+package com.zafiro_conductores;
 
 import io.flutter.embedding.android.FlutterActivity;
 

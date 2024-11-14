@@ -4,12 +4,12 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:zafiro_conductor/providers/travel_history_provider.dart';
-import 'package:zafiro_conductor/src/models/travelHistory.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/conectivity_service.dart';
 import '../../../../providers/driver_provider.dart';
+import '../../../../providers/travel_history_provider.dart';
 import '../../../models/driver.dart';
+import '../../../models/travelHistory.dart';
 
 class TravelCalificationController{
 

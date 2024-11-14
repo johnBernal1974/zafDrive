@@ -24,12 +24,12 @@ import '../../../models/travel_info.dart';
 import '../../antes_inicar_page/View/antes_inicar_page.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:zafiro_conductor/utils/utilsMap.dart';
-import 'package:zafiro_conductor/providers/geofire_provider.dart';
+import 'package:zafiro_conductores/utils/utilsMap.dart';
+import 'package:zafiro_conductores/providers/geofire_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 
-class DriverMapController with WidgetsBindingObserver{
+class DriverMapController{
   late BuildContext context;
   late Function refresh;
   bool isMoto = false;
@@ -40,7 +40,6 @@ class DriverMapController with WidgetsBindingObserver{
   double tarifa= 0;
   double? radioBusqueda;
   final String _yourGoogleAPIKey = dotenv.get('API_KEY');
-  GoogleMapController? _googleMapController;
 
 
   CameraPosition initialPosition = const CameraPosition(
@@ -65,6 +64,7 @@ class DriverMapController with WidgetsBindingObserver{
   late PushNotificationsProvider _pushNotificationsProvider;
   late TravelInfoProvider _travelInfoProvider;
   late PricesProvider _pricesProvider;
+  bool isSoundPlaying = false;
   String? rol = '';
 
   //Para verificacion de internet
@@ -72,16 +72,14 @@ class DriverMapController with WidgetsBindingObserver{
   bool isConnected = false; //**para validar el estado de conexion a internet
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;  // Suscripción para escuchar cambios en conectividad
   final locationService = LocationService();
-  Driver? driver;
 
-  GoogleMapController? mapController;
-  LatLng? currentPosition;
+
+
+  Driver? driver;
 
   Future? init(BuildContext context, Function refresh) async {
     this.context = context;
     this.refresh = refresh;
-
-    WidgetsBinding.instance.addObserver(this);
 
     // Inicialización de proveedores
     _geofireProvider = GeofireProvider();
@@ -104,7 +102,6 @@ class DriverMapController with WidgetsBindingObserver{
     await checkAndRequestLocationPermission();
     checkGPS();
 
-
     // Verificación de conexión a Internet y configuración de escucha de cambios
     await checkConnectionAndShowSnackbar();
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
@@ -114,139 +111,18 @@ class DriverMapController with WidgetsBindingObserver{
 
     // Obtener información del conductor
     getDriverInfo();
-    _initializeMap();
-    obtenerDatosPrice();
-  }
 
-  // Método para inicializar el mapa y obtener la posición
-  void _initializeMap() async {
+    // Obtener posición actual y configurar la posición inicial de la cámara
     _position = await Geolocator.getCurrentPosition();
     initialPosition = CameraPosition(
       target: LatLng(_position.latitude, _position.longitude),
       zoom: 20.0,
     );
-    addMarker('driver', _position.latitude, _position.longitude, 'Tu posición', '', markerDriver);
-    refresh();
-  }
 
-
-  void dispose(){
-    _positionStream.cancel();
-    _statusSuscription.cancel();
-    _driverInfoSuscription.cancel();
-    _connectivitySubscription?.cancel();
-    _googleMapController?.dispose();
-    WidgetsBinding.instance.removeObserver(this);
+    // Obtener datos de precios
+    obtenerDatosPrice();
 
   }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Detectar cuándo la app vuelve a primer plano para refrescar el mapa
-    if (state == AppLifecycleState.resumed) {
-      if (_googleMapController != null) {
-        // Redibuja la posición y marcadores cuando la app vuelve a primer plano
-        animateCameraToPosition(_position.latitude, _position.longitude);
-      }
-    }
-  }
-
-  void onMapCreated(GoogleMapController controller){
-    _googleMapController = controller;
-    if (!_mapController.isCompleted) {
-      _mapController.complete(controller);
-    }
-    controller.setMapStyle(utilsMap.mapStyle);
-    _mapController.complete(controller);
-  }
-
-  void updateLocation() async {
-    try {
-      await _determinePosition();
-      _position = (await Geolocator.getLastKnownPosition())!;
-      centerPosition();
-
-      // Asegúrate de que el rol esté cargado antes de continuar
-      rol = await obtenerRol();  // Espera a que se obtenga el rol
-
-      if (rol == null) {
-        if (kDebugMode) {
-          print('No se pudo obtener el rol. Deteniendo updateLocation.');
-        }
-        return;  // Detiene la ejecución si no hay rol disponible
-      }
-
-      saveLocation();
-      refresh();
-
-      _positionStream = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 2,
-        ),
-      ).listen((Position position) {
-        _position = position;
-
-        // Usa el rol para determinar qué marcador agregar
-        if (rol == 'moto') {
-          addMarker(
-            'driver',
-            _position.latitude,
-            _position.longitude,
-            "Tu posición", "",
-            markerMotorcycler,
-          );
-        } else {
-          addMarker(
-            'driver',
-            _position.latitude,
-            _position.longitude,
-            "Tu posición", "",
-            markerDriver,
-          );
-        }
-
-        animateCameraToPosition(_position.latitude, _position.longitude);
-        saveLocation();
-        refresh();
-      });
-
-      _positionStream.onError((error) {
-        if (kDebugMode) {
-          print('Error en el stream de posición: $error');
-        }
-      });
-    } catch (error) {
-      if (kDebugMode) {
-        print('Error en la localización: $error');
-      }
-    }
-  }
-
-  Future<void> animateCameraToPosition(double latitude, double longitude) async {
-    if (_googleMapController == null) return;
-    _googleMapController!.animateCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(
-        bearing: 0,
-        target: LatLng(latitude, longitude),
-        zoom: 14,
-      ),
-    ));
-  }
-
-  Future? animateCameraToPositionCenterPosition(double latitude, double longitude)  async {
-    GoogleMapController controller = await _mapController.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(
-            bearing: 0,
-            target: LatLng(latitude,longitude),
-            zoom: 15.3
-        )
-    )
-    );
-  }
-
-
 
   Future<void> checkAndRequestLocationPermission() async {
     await LocationPermissionManager.checkAndRequestLocationPermission(context);
@@ -254,7 +130,7 @@ class DriverMapController with WidgetsBindingObserver{
   // Método para verificar la conexión a Internet y mostrar el Snackbar si no hay conexión
   Future<void> checkConnectionAndShowSnackbar() async {
     await _connectionService.checkConnectionAndShowSnackbar(context, () {
-      refresh();
+      refresh();  // Llama al método de refresh si es necesario
     });
   }
 
@@ -285,35 +161,33 @@ class DriverMapController with WidgetsBindingObserver{
     }
   }
 
+  @override
+  void dispose(){
+    _positionStream.cancel();
+    _statusSuscription.cancel();
+    _driverInfoSuscription.cancel();
+    _connectivitySubscription?.cancel();
+  }
+
+  void onMapCreated(GoogleMapController controller){
+    controller.setMapStyle(utilsMap.mapStyle);
+    _mapController.complete(controller);
+  }
 
   void saveLocation() async {
     User? user = _authProvider.getUser();
     if (user != null) {
-      String? userRole = await obtenerRol(); // Llamada al método para obtener el rol
-      if (userRole != null) {
-        if (userRole == 'carro') {
-          await _geofireProvider.create(
-              user.uid, _position.latitude, _position.longitude);
-        } else if (userRole == 'moto') {
-          await _geofireProvider.createMotorcycler(
-              user.uid, _position.latitude, _position.longitude);
-        } else {
-          if (kDebugMode) {
-            print("Rol no reconocido: $userRole");
-          }
-        }
-      } else {
-        if (kDebugMode) {
-          print("No se pudo obtener el rol del usuario");
-        }
-      }
+      await _geofireProvider.create(
+          user.uid,
+          _position.latitude,
+          _position.longitude);
     } else {
       if (kDebugMode) {
-        print("El usuario es nulo");
+        print("El usuario es nulo************");
       }
+
     }
   }
-
 
   void saveToken(){
     _pushNotificationsProvider.saveToken(_authProvider.getUser()!.uid);
@@ -357,23 +231,77 @@ class DriverMapController with WidgetsBindingObserver{
 
   }
 
-  void checkIfIsConnected() {
-    Stream<DocumentSnapshot> status = _geofireProvider.getLocationByIdStream(_authProvider.getUser()!.uid);
+  void checkIfIsConnected(){
+    Stream<DocumentSnapshot> status=
+    _geofireProvider.getLocationByIdStream(_authProvider.getUser()!.uid);
     _statusSuscription = status.listen((DocumentSnapshot document) {
-      if (document.exists) {
+      if(document.exists){
         isConected = true;
         _driverProvider.updateIsActiveATrue(_authProvider.getUser()!.uid);
-      } else {
+      }else{
         isConected = false;
         _driverProvider.updateIsActiveAFalse(_authProvider.getUser()!.uid);
       }
       refresh();
     });
+
+  }
+
+  void updateLocation() async {
+    try {
+      final stopwatch = Stopwatch()..start();
+      await _determinePosition();
+      _position = (await Geolocator.getLastKnownPosition())!;
+      centerPosition();
+      saveLocation();
+      refresh();
+
+      _positionStream = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 2,
+        ),
+      ).listen((Position position) {
+        _position = position;
+        if (rol == 'moto') {
+          addMarker(
+            'driver',
+            _position.latitude,
+            _position.longitude,
+            "Tu posición", "",
+            markerMotorcycler,
+          );
+        } else {
+          addMarker(
+            'driver',
+            _position.latitude,
+            _position.longitude,
+            "Tu posición", "",
+            markerDriver,
+          );
+        }
+
+        animateCameraToPosition(_position.latitude, _position.longitude);
+        saveLocation();
+        refresh();
+      });
+
+      _positionStream.onError((error) {
+        if (kDebugMode) {
+          print('Error en el stream de posición: $error');
+        }
+      });
+    } catch (error) {
+      if (kDebugMode) {
+        print('Error en la localizacion: $error');
+      }
+    }
   }
 
 
   void centerPosition(){
-    animateCameraToPositionCenterPosition (_position.latitude, _position.longitude);
+    animateCameraToPosition (_position.latitude, _position.longitude);
+
   }
 
   void checkGPS() async{
@@ -451,6 +379,7 @@ class DriverMapController with WidgetsBindingObserver{
     );
   }
 
+
   Future<Position> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -460,6 +389,7 @@ class DriverMapController with WidgetsBindingObserver{
     if (!serviceEnabled) {
       return Future.error('Location services are disabled.');
     }
+
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -467,11 +397,28 @@ class DriverMapController with WidgetsBindingObserver{
         return Future.error('Location permissions are denied');
       }
     }
+
     if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
       return Future.error(
           'Location permissions are permanently denied, we cannot request permissions.');
     }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition();
+  }
+
+  Future? animateCameraToPosition(double latitude, double longitude)  async {
+    GoogleMapController controller = await _mapController.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(
+            bearing: 0,
+            target: LatLng(latitude,longitude),
+            zoom: 14
+
+        )));
+
   }
 
   Future<BitmapDescriptor> createMarkerImageFromAssets(String path) async {
@@ -501,8 +448,11 @@ class DriverMapController with WidgetsBindingObserver{
         anchor: const Offset(0.5, 0.5),
         rotation: _position.heading
     );
+
     markers[id] = marker;
+
   }
+
 
   void _soundDesonectado(String audioPath) async {
     _player = AudioPlayer();
@@ -510,18 +460,14 @@ class DriverMapController with WidgetsBindingObserver{
     await _player.play();
   }
 
-  Future<String?> obtenerRol() async {
+  void obtenerRol() async {
     User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('Drivers')
-          .doc(user.uid)
-          .get();
-      if (userDoc.exists) {
-        return userDoc.get('rol') as String?;
-      }
-    }
-    return null;
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('Drivers') // Cambia 'drivers' según tu estructura
+        .doc(user?.uid)
+        .get();
+
+    rol = userDoc.get('rol');
   }
 
 
@@ -533,49 +479,61 @@ class DriverMapController with WidgetsBindingObserver{
         throw Exception('Usuario no autenticado');
       }
       locationService.startListeningToLocation();
+
       // Obtener el rol del conductor desde la base de datos
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
-        .collection('Drivers')
-        .doc(user.uid)
-        .get();
+          .collection('Drivers') // Cambia 'drivers' según tu estructura
+          .doc(user.uid)
+          .get();
+
       String? rol = userDoc.get('rol');
       if (rol == null) {
         throw Exception('Rol del conductor no encontrado');
       }
+
       // Obtener las solicitudes con estado "created" de Firestore
       Query requestsQuery = FirebaseFirestore.instance
           .collection('TravelInfo')
           .where('status', isEqualTo: 'created');
+
       // Si el rol es "carro", aplicar filtro adicional por tipo de servicio
       if (rol == 'carro') {
         requestsQuery = requestsQuery.where('tipoServicio', whereIn: ['Transporte', 'Encomienda']);
       } else {
         requestsQuery = requestsQuery.where('tipoServicio', whereIn: ['Moto', 'Encomienda']);
       }
+
       // Continuar con la consulta de snapshots
       final requestsCollection = requestsQuery.snapshots();
+
       // Almacenar IDs de solicitudes visibles para comparación
       List<String> currentRequestIds = [];
       // Almacenar el conteo anterior de solicitudes
+      int previousDocumentCount = 0;
 
       await for (var snapshot in requestsCollection) {
         // Obtener la ubicación actual del conductor
         LatLng driverLocation = await locationService.getCurrentDriverPosition();
         double currentLat = driverLocation.latitude;
         double currentLong = driverLocation.longitude;
+
         // Lista de solicitudes filtradas por distancia
         List<Map<String, dynamic>> filteredRequests = [];
+
         for (var doc in snapshot.docs) {
           Map<String, dynamic> data = doc.data() as Map<String, dynamic>;  // Casting explícito
           double requestLat = (data['fromLat'] as num).toDouble();
           double requestLong = (data['fromLng'] as num).toDouble();
           documentId = doc.id;
+
           // Calcular la distancia entre el conductor y la solicitud
           double distanceInMeters = Geolocator.distanceBetween(currentLat, currentLong, requestLat, requestLong);
+
           // Obtener tiempo y distancia usando la API
           var apiKey = _yourGoogleAPIKey; // Reemplaza con tu clave API
           var durationAndDistance = await fetchDistanceAndDuration(
               LatLng(currentLat, currentLong), LatLng(requestLat, requestLong), apiKey);
+
           // Solo añadimos solicitudes que están dentro del rango
           double radioDeBusqueda = radioBusqueda! * 1000; // Radio en metros
           if (distanceInMeters <= radioDeBusqueda) {
@@ -592,12 +550,19 @@ class DriverMapController with WidgetsBindingObserver{
             currentRequestIds.add(documentId);
           }
         }
+
         // Filtrar las solicitudes que ya no son visibles
         filteredRequests.removeWhere((request) => !currentRequestIds.contains(request['id']));
+
+        // Actualizar el conteo anterior después de la verificación
+        previousDocumentCount = filteredRequests.length;
+
         // Emitir la lista actualizada de solicitudes filtradas
         yield filteredRequests;
+
         // Limpiar la lista de IDs para la próxima iteración
-        currentRequestIds.clear();      }
+        currentRequestIds.clear();
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error al obtener solicitudes filtradas: $e');
@@ -606,11 +571,13 @@ class DriverMapController with WidgetsBindingObserver{
     }
   }
 
+
+
   Future<Map<String, dynamic>> fetchDistanceAndDuration(
       LatLng origin, LatLng destination, String apiKey) async {
     final url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},'
-        '${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=$apiKey';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=$apiKey';
+
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -626,16 +593,11 @@ class DriverMapController with WidgetsBindingObserver{
         if (kDebugMode) {
           print('Error en la respuesta de la API: ${data['status']}');
         }
-        // Manejo de error: devolver valores nulos si no es 'OK'
         return {
           'duration': null,
           'distance': null,
         };
       }
-    }
-
-    if (kDebugMode) {
-      print('Error en la solicitud: ${response.statusCode}');
     }
     throw Exception('Error fetching distance and duration');
   }
@@ -646,48 +608,43 @@ class DriverMapController with WidgetsBindingObserver{
     String? idDriver = travelInfo?.idDriver;
     String? idCurrentDriver = _authProvider.getUser()?.uid;
 
-    // Verificar si el objeto travelInfo no es nulo y si el idDriver está vacío
-    if (travelInfo != null && (idDriver == null || idDriver.isEmpty)) {
-      // Si el idDriver está vacío, proceder con la lógica de aceptación
-      Map<String, dynamic> data = {
-        'idDriver': idCurrentDriver,
-        'status': 'accepted',
-      };
-      // Actualizar el documento en Firestore
-      await _travelInfoProvider.update(data, documentId);
-      await _geofireProvider.delete(idCurrentDriver!);
-      actualizarEstadoIsWorkingTrue();
-      guardarUltimoCliente();
-      _driverProvider.updateIsActiveAFalse(idCurrentDriver);
-      // Redirigir a la página del mapa de viajes
-      goToTravelMapPage();
-
-    } else if (travelInfo != null && travelInfo.status == 'accepted') {
-      // Si el estado ya es 'accepted' y otro conductor aceptó el viaje
+    // Verificar si el objeto travelInfo no es nulo y si el estado ya ha sido aceptado
+    if (travelInfo != null && travelInfo.status == 'accepted') {
       if(idDriver != idCurrentDriver){
-        if(context.mounted){
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Este servicio ya ha sido aceptado por otro conductor.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } else {
-      // Si travelInfo es nulo, significa que no se encontró el viaje
-      if(context.mounted){
+        // Mostrar un mensaje de advertencia al conductor
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No se encontró el servicio solicitado.'),
+            content: Text('Este servicio ya ha sido aceptado por otro conductor.'),
             backgroundColor: Colors.red,
           ),
         );
       }
+
+    } else if (travelInfo != null) {
+      // Si el servicio no ha sido aceptado, proceder con la lógica de aceptación
+      Map<String, dynamic> data = {
+        'idDriver': _authProvider.getUser()!.uid,
+        'status': 'accepted',
+      };
+      // Actualizar el documento en Firestore
+      _travelInfoProvider.update(data, documentId);
+      _geofireProvider.delete(_authProvider.getUser()!.uid);
+      actualizarEstadoIsWorkingTrue();
+      guardarUltimoCliente();
+      _driverProvider.updateIsActiveAFalse(_authProvider.getUser()!.uid);
+
+      // Redirigir a la página del mapa de viajes
+      goToTravelMapPage();
+    } else {
+      // Si travelInfo es nulo, significa que no se encontró el viaje
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se encontró el servicio solicitado.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
-
-
   void actualizarEstadoIsWorkingTrue () async {
     Map<String, dynamic> data = {
       '00_is_working': true};

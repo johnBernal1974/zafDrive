@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zafiro_conductor/src/colors/colors.dart';
+import 'package:zafiro_conductores/src/colors/colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -37,10 +37,10 @@ class _InfoPermisosPageState extends State<InfoPermisosPage> {
             children: [
               Container(
                   alignment: Alignment.center,
-                  child: Image.asset('assets/images/logo_zafiro-pequeño.png', width: 100)),
+                  child: Image.asset('assets/images/logo_zafiro-pequeño.png', width: 50)),
               const SizedBox(height: 15),
               Container(
-                margin: const EdgeInsets.only(left: 20, right: 20),
+                margin: const EdgeInsets.only(left: 10, right: 10),
                 child: const Text(
                   'Zafiro necesita para su correcto funcionamiento que aceptes los siguientes permisos en el momento que te sean solicitados:',
                   style: TextStyle(fontSize: 12, height: 1),
@@ -171,11 +171,8 @@ class _InfoPermisosPageState extends State<InfoPermisosPage> {
               ),
               const SizedBox(height: 40),
               Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primary, // Asegúrate de que `primary` sea un Color válido
-                  ),
-                  onPressed: () async {
+                child: GestureDetector(
+                  onTap: () async {
                     // Obtener el UID del usuario actual
                     String? uid = _auth.currentUser?.uid;
                     if (uid != null) {
@@ -185,12 +182,12 @@ class _InfoPermisosPageState extends State<InfoPermisosPage> {
                           'info_permisos': true,
                         });
                         // Navegar a la siguiente página
-                        if(context.mounted){
+                        if (context.mounted) {
                           Navigator.pushNamedAndRemoveUntil(context, 'antes_iniciar', (route) => false);
                         }
                       } catch (e) {
                         // Manejo de errores
-                        if(context.mounted){
+                        if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error al actualizar la base de datos: $e')),
                           );
@@ -203,12 +200,26 @@ class _InfoPermisosPageState extends State<InfoPermisosPage> {
                       );
                     }
                   },
-                  child: const Text(
-                    'Entendido',
-                    style: TextStyle(color: Colors.white), // Asegúrate de que `blanco` sea un Color válido
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Entendido',
+                        style: TextStyle(
+                          color: Colors.black, // Asegúrate de que sea un color válido
+                          fontSize: 16, // Ajusta el tamaño de la fuente según tu diseño
+                        ),
+                      ),
+                      SizedBox(width: 8), // Espacio entre el texto y el ícono
+                      Icon(
+                        Icons.double_arrow, // Ícono de doble flecha
+                        color: Colors.black, // Asegúrate de que sea un color válido
+                      ),
+                    ],
                   ),
                 ),
               ),
+
             ],
           ),
         ),

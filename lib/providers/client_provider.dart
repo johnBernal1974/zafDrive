@@ -1,7 +1,8 @@
 
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:zafiro_conductor/src/models/client.dart';
+import 'package:zafiro_conductores/src/models/client.dart';
+import 'package:zafiro_conductores/src/models/client.dart';
 
 class ClientProvider{
 

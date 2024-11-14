@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:zafiro_conductor/providers/driver_provider.dart';
+import 'package:zafiro_conductores/providers/driver_provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/storage_provider.dart';
 import '../../../models/driver.dart';

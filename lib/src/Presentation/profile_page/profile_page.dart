@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:zafiro_conductor/src/Presentation/profile_page/profileController/profileController.dart';
+import 'package:zafiro_conductores/src/Presentation/profile_page/profileController/profileController.dart';
 import '../../colors/colors.dart';
 import '../commons_widgets/headers/header_text/header_text.dart';
 

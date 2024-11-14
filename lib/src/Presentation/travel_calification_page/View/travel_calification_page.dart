@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
-import 'package:zafiro_conductor/src/Presentation/travel_calification_page/travel_calification_controller/travel_calification_controller.dart';
 import '../../../../providers/conectivity_service.dart';
 import '../../../colors/colors.dart';
+import '../travel_calification_controller/travel_calification_controller.dart';
 
 class TravelCalificationPage extends StatefulWidget {
   const TravelCalificationPage({super.key});
