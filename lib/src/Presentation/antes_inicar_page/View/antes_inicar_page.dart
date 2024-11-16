@@ -152,7 +152,9 @@ class _AntesIniciarPageState extends State<AntesIniciarPage> {
   }
 
   void refresh() {
-    setState(() {});
+    if(context.mounted){
+      setState(() {});
+    }
   }
 
   void _mostrarAlertDialog(BuildContext context) {
