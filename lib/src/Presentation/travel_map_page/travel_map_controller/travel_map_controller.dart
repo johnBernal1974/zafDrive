@@ -869,13 +869,13 @@ class TravelMapController with WidgetsBindingObserver{
   }
 
   void actualizarHoraInicio () async {
-    Map<String, dynamic> data = {'horaInicioViaje': DateHelpers.getStartDate()};
+    Map<String, dynamic> data = {'horaInicioViaje': Timestamp.now()};
     await _travelInfoProvider.update(data, _idTravel!);
     refresh();
   }
 
   void actualizarHoraFinViaje() async {
-    Map<String, dynamic> data = {'horaFinalizacionViaje': DateHelpers.getStartDate()};
+    Map<String, dynamic> data = {'horaFinalizacionViaje': Timestamp.now()};
     // Actualizar la hora de finalización del viaje en la base de datos
     await _travelInfoProvider.update(data, _idTravel!).then((_) {
       refresh();
@@ -1123,38 +1123,72 @@ class TravelMapController with WidgetsBindingObserver{
     refresh();
   }
 
-  void saveTravelHistory () async {
-    String inicioViaje = travelInfo?.horaInicioViaje ?? '';
-    String finalViaje = travelInfo?.horaFinalizacionViaje ?? '';
+  void saveTravelHistory() async {
+    // Convertir horaInicioViaje y horaFinalizacionViaje (si es Timestamp) a String
+    String inicioViaje = '';
+    if (travelInfo?.horaInicioViaje != null) {
+      DateTime inicioDate = travelInfo!.horaInicioViaje!.toDate();
+      inicioViaje = "${inicioDate.year}-${inicioDate.month.toString().padLeft(2, '0')}-${inicioDate.day.toString().padLeft(2, '0')} ${inicioDate.hour}:${inicioDate.minute.toString().padLeft(2, '0')}";
+    }
+
+    String finalViaje = '';
+    if (travelInfo?.horaFinalizacionViaje != null) {
+      DateTime finalDate = travelInfo!.horaFinalizacionViaje!.toDate();
+      finalViaje = "${finalDate.year}-${finalDate.month.toString().padLeft(2, '0')}-${finalDate.day.toString().padLeft(2, '0')} ${finalDate.hour}:${finalDate.minute.toString().padLeft(2, '0')}";
+    }
+
+    // Convertir horaSolicitudViaje a String si es necesario
+    String solicitudViaje = '';
+    if (travelInfo?.horaSolicitudViaje != null) {
+      DateTime solicitudDate = travelInfo!.horaSolicitudViaje!.toDate();
+      solicitudViaje = "${solicitudDate.year}-${solicitudDate.month.toString().padLeft(2, '0')}-${solicitudDate.day.toString().padLeft(2, '0')} ${solicitudDate.hour}:${solicitudDate.minute.toString().padLeft(2, '0')}";
+    }
+
+    // Crear el objeto TravelHistory
     TravelHistory travelHistory = TravelHistory(
-        id: '',
-        idClient: _idTravel!,
-        idDriver: _authProvider.getUser()!.uid,
-        from: travelInfo?.from ?? '',
-        to: travelInfo?.to ?? '',
-        nameDriver: "",
-        apellidosDriver: "",
-        placa: "",
-        solicitudViaje: travelInfo?.horaSolicitudViaje ?? '',
-        inicioViaje: inicioViaje,
-        finalViaje: finalViaje,
-        tarifa: travelInfo?.tarifa ?? 0,
-        tarifaDescuento: travelInfo?.tarifaDescuento ?? 0,
-        tarifaInicial: travelInfo?.tarifaInicial ?? 0,
-        calificacionAlConductor: 0,
-        calificacionAlCliente: 0,
-        rol: driver!.rol,
-        apuntes:travelInfo?.apuntes ?? '',
+      id: '',
+      idClient: _idTravel!,
+      idDriver: _authProvider.getUser()!.uid,
+      from: travelInfo?.from ?? '',
+      to: travelInfo?.to ?? '',
+      nameDriver: "",
+      apellidosDriver: "",
+      placa: "",
+      solicitudViaje: solicitudViaje,
+      inicioViaje: inicioViaje,
+      finalViaje: finalViaje,
+      tarifa: travelInfo?.tarifa ?? 0,
+      tarifaDescuento: travelInfo?.tarifaDescuento ?? 0,
+      tarifaInicial: travelInfo?.tarifaInicial ?? 0,
+      calificacionAlConductor: 0,
+      calificacionAlCliente: 0,
+      rol: driver!.rol,
+      apuntes: travelInfo?.apuntes ?? '',
+      tipoServicio: travelInfo?.tipoServicio ?? '',
     );
+
+    // Guardar el historial de viaje
     String id = await _travelHistoryProvider.create(travelHistory);
-    Map<String , dynamic> data = {
+
+    // Actualizar el estado del viaje en la base de datos
+    Map<String, dynamic> data = {
       'status': 'finished',
       'idTravelHistory': id,
     };
     await _travelInfoProvider.update(data, _idTravel!);
-    travelInfo?.status= 'finished';
-    Navigator.pushNamedAndRemoveUntil(context, 'travel_calification_page', (route) => false, arguments: id);
+
+    // Actualizar el estado local del viaje
+    travelInfo?.status = 'finished';
+
+    // Navegar a la página de calificación
+    Navigator.pushNamedAndRemoveUntil(
+        context,
+        'travel_calification_page',
+            (route) => false,
+        arguments: id
+    );
   }
+
 
   void isCloseToPickupPosition(LatLng from, LatLng to) {
     _distanceBetween = Geolocator.distanceBetween(

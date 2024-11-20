@@ -24,6 +24,7 @@ class TravelHistory {
   double calificacionAlCliente;
   String rol;
   String apuntes;
+  String tipoServicio;
 
   TravelHistory({
     required this.id,
@@ -44,6 +45,7 @@ class TravelHistory {
     required this.calificacionAlCliente,
     required this.rol,
     required this.apuntes,
+    required this.tipoServicio,
   });
 
   factory TravelHistory.fromJson(Map<String, dynamic> json) => TravelHistory(
@@ -65,6 +67,7 @@ class TravelHistory {
     calificacionAlCliente: json["calificacionAlCliente"]?.toDouble() ?? 0,
     rol: json["rol"],
     apuntes: json["apuntes"],
+    tipoServicio: json["tipoServicio"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -86,5 +89,6 @@ class TravelHistory {
     "calificacionAlCliente": calificacionAlCliente,
     "rol": rol,
     "apuntes": apuntes,
+    "tipoServicio": tipoServicio,
   };
 }

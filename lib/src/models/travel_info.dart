@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 TravelInfo travelInfoFromJson(String str) => TravelInfo.fromJson(json.decode(str));
 
 String travelInfoToJson(TravelInfo data) => json.encode(data.toJson());
@@ -20,11 +22,12 @@ class TravelInfo {
   double tarifaInicial;
   double distancia; // Corregido el nombre del campo
   double tiempoViaje;
-  String horaSolicitudViaje;
-  String horaInicioViaje;
-  String horaFinalizacionViaje;
+  Timestamp horaSolicitudViaje;
+  Timestamp? horaInicioViaje;
+  Timestamp? horaFinalizacionViaje;
   double distanciaRecorrida;
   String apuntes;
+  String tipoServicio;
 
   TravelInfo({
     required this.id,
@@ -47,6 +50,7 @@ class TravelInfo {
     required this.horaFinalizacionViaje,
     required this.distanciaRecorrida,
     required this.apuntes,
+    required this.tipoServicio,
   });
 
   factory TravelInfo.fromJson(Map<String, dynamic> json) => TravelInfo(
@@ -66,10 +70,11 @@ class TravelInfo {
     distancia: json["distancia"]?.toDouble() ?? 0.0, // Manejo de valores nulos y corrección del nombre del campo
     tiempoViaje: json["tiempoViaje"]?.toDouble() ?? 0.0, // Manejo de valores nulos
     horaSolicitudViaje: json["horaSolicitudViaje"],
-    horaInicioViaje: json["horaInicioViaje"],
-    horaFinalizacionViaje: json["horaFinalizacionViaje"],
+    horaInicioViaje: json['horaInicioViaje'] != null ? json['horaInicioViaje'] as Timestamp : null, // Asegúrate de manejar los valores nulos
+    horaFinalizacionViaje: json["horaFinalizacionViaje"] != null ? json["horaFinalizacionViaje"] as Timestamp : null,  // Manejo de null
     distanciaRecorrida: json["distanciaRecorrida"]?.toDouble() ?? 0.0,
     apuntes: json["apuntes"],
+    tipoServicio: json["tipoServicio"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -93,5 +98,6 @@ class TravelInfo {
     "horaFinalizacionViaje": horaFinalizacionViaje,
     "distanciaRecorrida": distanciaRecorrida,
     "apuntes": apuntes,
+    "tipoServicio": tipoServicio,
   };
 }
