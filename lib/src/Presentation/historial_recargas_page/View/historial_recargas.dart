@@ -108,6 +108,7 @@ class _HistorialRecargasPageState extends State<HistorialRecargasPage> {
           final recarga = recargas[index];
           DateTime fechaHora = (recarga['fecha_hora'] as Timestamp).toDate(); // Convert timestamp to DateTime
           return Card(
+            color: blanco,
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             elevation: 3,
             child: Padding(
@@ -121,7 +122,7 @@ class _HistorialRecargasPageState extends State<HistorialRecargasPage> {
                     children: [
                       const Text(
                         "Fecha:",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1, color: gris),
                       ),
                       Text(
                         DateFormat('dd/MM/yyyy hh:mm a').format(fechaHora),
@@ -137,7 +138,7 @@ class _HistorialRecargasPageState extends State<HistorialRecargasPage> {
                     children: [
                       const Text(
                         "Saldo Anterior:",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1, color: gris),
                       ),
                       Text(
                         formatCurrency(recarga['saldo_anterior'].toDouble()),
@@ -153,11 +154,11 @@ class _HistorialRecargasPageState extends State<HistorialRecargasPage> {
                     children: [
                       const Text(
                         "Recarga actual:",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1, color: gris),
                       ),
                       Text(
                         formatCurrency(recarga['nueva_recarga'].toDouble()),
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, height: 1),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, height: 1),
                       ),
                     ],
                   ),
@@ -169,7 +170,7 @@ class _HistorialRecargasPageState extends State<HistorialRecargasPage> {
                     children: [
                       const Text(
                         "Saldo final:",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1, color: gris),
                       ),
                       Text(
                         formatCurrency(recarga['saldo-total'].toDouble()),

@@ -151,15 +151,6 @@ class TravelMapController with WidgetsBindingObserver{
     }
   }
 
-
-
-  // Método para verificar la conexión a Internet y mostrar el Snackbar si no hay conexión
-  Future<void> checkConnectionAndShowSnackbar() async {
-    await _connectionService.checkConnectionAndShowSnackbar(context, () {
-      refresh();
-    });
-  }
-
   void dispose(){
     _positionStream.cancel();
     _statusSuscription.cancel();
@@ -182,6 +173,58 @@ class TravelMapController with WidgetsBindingObserver{
         print("El usuario es nulo");
       }
     }
+  }
+
+  void onMapCreated(GoogleMapController controller){
+    _googleMapController = controller;
+    if (!_mapController.isCompleted) {
+      _mapController.complete(controller);
+    }
+    controller.setMapStyle(utilsMap.mapStyle);
+    _mapController.complete(controller);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _reloadMap(); // Recargar el mapa cuando la app regresa al primer plano
+    }
+  }
+
+  void _reloadMap() async {
+    if (_googleMapController != null) {
+      // Vuelve a centrar la cámara en la posición actual
+      animateCameraToPosition(_position.latitude, _position.longitude);
+      refresh(); // Refresca el mapa
+    }
+  }
+
+  Future<void> animateCameraToPosition(double latitude, double longitude) async {
+    if (_googleMapController == null) return;
+    _googleMapController!.animateCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(
+        bearing: 0,
+        target: LatLng(latitude, longitude),
+        zoom: 15.8,
+      ),
+    ));
+  }
+
+  Future? animateCameraToPositionCenterPosition(double latitude, double longitude)  async {
+    GoogleMapController controller = await _mapController.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(
+            bearing: 0,
+            target: LatLng(latitude,longitude),
+            zoom: 14
+        )
+    )
+    );
+  }
+
+  void centerPosition(){
+    animateCameraToPositionCenterPosition (_position.latitude, _position.longitude);
+
   }
 
   void updateLocation() async {
@@ -249,6 +292,14 @@ class TravelMapController with WidgetsBindingObserver{
     );
     markers[const MarkerId('driver')] = currentMarker!;
     refresh();
+  }
+
+
+  // Método para verificar la conexión a Internet y mostrar el Snackbar si no hay conexión
+  Future<void> checkConnectionAndShowSnackbar() async {
+    await _connectionService.checkConnectionAndShowSnackbar(context, () {
+      refresh();
+    });
   }
 
   void obtenerRol() async {
@@ -1188,7 +1239,6 @@ class TravelMapController with WidgetsBindingObserver{
     }
   }
 
-
   void isCloseToPickupPosition(LatLng from, LatLng to) {
     _distanceBetween = Geolocator.distanceBetween(
         from.latitude,
@@ -1233,37 +1283,7 @@ class TravelMapController with WidgetsBindingObserver{
     refresh();
   }
 
-  void onMapCreated(GoogleMapController controller){
-    _googleMapController = controller;
-    if (!_mapController.isCompleted) {
-      _mapController.complete(controller);
-    }
-    controller.setMapStyle(utilsMap.mapStyle);
-    _mapController.complete(controller);
-  }
 
-  Future<void> animateCameraToPosition(double latitude, double longitude) async {
-    if (_googleMapController == null) return;
-    _googleMapController!.animateCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(
-        bearing: 0,
-        target: LatLng(latitude, longitude),
-        zoom: 15.3,
-      ),
-    ));
-  }
-
-  Future? animateCameraToPositionCenterPosition(double latitude, double longitude)  async {
-    GoogleMapController controller = await _mapController.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(
-            bearing: 0,
-            target: LatLng(latitude,longitude),
-            zoom: 14
-        )
-    )
-    );
-  }
 
   Future<BitmapDescriptor> createMarkerImageFromAssets(String path) async {
     ImageConfiguration configuration = const ImageConfiguration();
@@ -1294,10 +1314,7 @@ class TravelMapController with WidgetsBindingObserver{
     markers[id] = marker;
   }
 
-  void centerPosition(){
-    animateCameraToPositionCenterPosition (_position.latitude, _position.longitude);
 
-  }
 
   void goToCompartirAplicacion(){
     Navigator.pushNamed(context, "compartir_aplicacion");
