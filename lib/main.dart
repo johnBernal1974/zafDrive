@@ -57,52 +57,10 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await initializeService();
-  //FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   registerLocationUpdateTask();
   runApp(MyApp());
 }
 
-// Inicializa el servicio en segundo plano
-Future<void> initializeService() async {
-  final service = FlutterBackgroundService();
-  // Configurar el servicio
-  await service.configure(
-    androidConfiguration: AndroidConfiguration(
-      onStart: onStart, // Función a ejecutar al iniciar el servicio
-      isForegroundMode: true,
-      autoStart: true,
-      autoStartOnBoot: true,
-    ),
-    iosConfiguration: IosConfiguration(
-      onForeground: onStart,
-      onBackground: onIosBackground,
-    ),
-  );
-
-  service.startService(); // Iniciar el servicio en segundo plano
-}
-
-// Función que se ejecuta al iniciar el servicio
-Future<bool> onStart(ServiceInstance service) async {
-  if (service is AndroidServiceInstance) {
-    service.setAsForegroundService();
-    service.setForegroundNotificationInfo(
-      title: "Actualizando tu ubicación",
-      content: "El servicio de ubicación está activo en segundo plano.",
-    );
-  }
-  return true;
-}
-
-// Función que se ejecuta en segundo plano en iOS
-Future<bool> onIosBackground(ServiceInstance service) async {
-  return true; // Retornar true para indicar que el servicio se ha iniciado correctamente
-}
-// // Maneja los mensajes de Firebase en segundo plano
-// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-//   EventManager.sendEvent(OpenPageEvent('map_driver'));
-// }
 
 class MyApp extends StatefulWidget {
   @override

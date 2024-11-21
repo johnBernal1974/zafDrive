@@ -14,6 +14,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:zafiro_conductores/src/Presentation/splash_page/View/splash_page.dart';
 import 'dart:async';
 import '../../../../Helpers/Validators/FormValidators.dart';
+import '../../../../Helpers/background_service_manager.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/conectivity_service.dart';
 import '../../../colors/colors.dart';
@@ -38,6 +39,7 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
   StreamSubscription<List<Map<String, dynamic>>>? _requestsSubscription;
   double saldo= 0;
   final ConnectionService connectionService = ConnectionService();
+  final BackgroundServiceManager backgroundServiceManager = BackgroundServiceManager();
 
 
   @override
@@ -425,8 +427,10 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
   }
 
   void refresh() {
-    setState(() {
-    });
+    if(mounted){
+      setState(() {
+      });
+    }
   }
 
   Widget _buttonCenterPosition(){
@@ -474,6 +478,8 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
         if (hasConnection) {
           // Si hay conexión, procede a desconectar
           _controller.disconnect();
+          stopService();
+
           // Usa un Navigator en un Future para evitar el contexto asíncrono
           Future.microtask(() {
             Navigator.pushReplacement(
@@ -552,6 +558,11 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
         ),
       ),
     );
+  }
+
+  void stopService() async {
+    await backgroundServiceManager.stopService();
+    print("**************Servicio en segundo plano detenido******************************");
   }
 
   Future alertSinInternet (){

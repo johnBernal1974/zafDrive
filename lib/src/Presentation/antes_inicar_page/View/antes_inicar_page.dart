@@ -11,6 +11,7 @@ import '../../../colors/colors.dart';
 import '../../commons_widgets/headers/header_text/header_text.dart';
 import '../../splash_page/View/splash_page.dart';
 import '../antes_iniciar_controller/antes_iniciar_controller.dart';
+import 'package:zafiro_conductores/Helpers/background_service_manager.dart';
 
 class AntesIniciarPage extends StatefulWidget {
   const AntesIniciarPage({super.key});
@@ -30,6 +31,7 @@ class _AntesIniciarPageState extends State<AntesIniciarPage> {
   final ConnectionService connectionService = ConnectionService();
   bool _isLoading = false;
   bool _isLoadingRecarga = false;
+  final BackgroundServiceManager backgroundServiceManager = BackgroundServiceManager();
 
 
   @override
@@ -39,6 +41,7 @@ class _AntesIniciarPageState extends State<AntesIniciarPage> {
       _controller.init(context, refresh);
       _controller.requestNotificationPermission();
       _authProvider = MyAuthProvider();
+      backgroundServiceManager.initializeService();
     });
   }
 
@@ -148,7 +151,13 @@ class _AntesIniciarPageState extends State<AntesIniciarPage> {
       Snackbar.showSnackbar(context, key, 'Tu cuenta se encuentra sin saldo. Haz una recarga para poder ingresar');
     }else{
       Navigator.pushNamedAndRemoveUntil(context, "map_driver", (route) => false);
+      startService();
     }
+  }
+
+  void startService() async {
+    await backgroundServiceManager.startService();
+    print("*********************Servicio en segundo plano iniciado*********************************");
   }
 
   void refresh() {

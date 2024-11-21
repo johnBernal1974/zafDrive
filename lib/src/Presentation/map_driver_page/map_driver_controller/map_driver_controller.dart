@@ -242,7 +242,7 @@ class DriverMapController{
         isConected = false;
         _driverProvider.updateIsActiveAFalse(_authProvider.getUser()!.uid);
       }
-      refresh();
+      //refresh();
     });
 
   }
