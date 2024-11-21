@@ -29,7 +29,7 @@ import 'package:zafiro_conductores/providers/geofire_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 
-class DriverMapController{
+class DriverMapController with WidgetsBindingObserver{
   late BuildContext context;
   late Function refresh;
   bool isMoto = false;
@@ -81,6 +81,8 @@ class DriverMapController{
     this.context = context;
     this.refresh = refresh;
 
+    WidgetsBinding.instance.addObserver(this);
+
     // Inicialización de proveedores
     _geofireProvider = GeofireProvider();
     _authProvider = MyAuthProvider();
@@ -124,6 +126,39 @@ class DriverMapController{
 
   }
 
+  @override
+  void dispose(){
+    _positionStream.cancel();
+    _statusSuscription.cancel();
+    _driverInfoSuscription.cancel();
+    _connectivitySubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  void onMapCreated(GoogleMapController controller) {
+    controller.setMapStyle(utilsMap.mapStyle);
+    if (!_mapController.isCompleted) {
+      _mapController.complete(controller); // Completar solo una vez
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _reloadMap(); // Fuerza la recarga del mapa al reanudar
+    }
+  }
+
+  void _reloadMap() async {
+    if (_mapController.isCompleted) {
+      GoogleMapController controller = await _mapController.future;
+      controller.setMapStyle(utilsMap.mapStyle);
+      // Opcional: Fuerza la redibujación de los marcadores
+      refresh();
+    }
+  }
+
+
   Future<void> checkAndRequestLocationPermission() async {
     await LocationPermissionManager.checkAndRequestLocationPermission(context);
   }
@@ -161,18 +196,7 @@ class DriverMapController{
     }
   }
 
-  @override
-  void dispose(){
-    _positionStream.cancel();
-    _statusSuscription.cancel();
-    _driverInfoSuscription.cancel();
-    _connectivitySubscription?.cancel();
-  }
 
-  void onMapCreated(GoogleMapController controller){
-    controller.setMapStyle(utilsMap.mapStyle);
-    _mapController.complete(controller);
-  }
 
   void saveLocation() async {
     User? user = _authProvider.getUser();

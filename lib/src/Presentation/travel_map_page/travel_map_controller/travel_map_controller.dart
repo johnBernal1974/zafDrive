@@ -23,8 +23,6 @@ import 'package:zafiro_conductores/src/models/travel_info.dart';
 import 'package:zafiro_conductores/utils/utilsMap.dart';
 import 'package:location/location.dart' as location;
 import 'package:url_launcher/url_launcher.dart';
-
-import '../../../../Helpers/Dates/DateHelpers.dart';
 import '../../../../Helpers/SnackBar/snackbar.dart';
 import '../../../../providers/conectivity_service.dart';
 import '../../../../providers/prices_provider.dart';
@@ -1140,7 +1138,7 @@ class TravelMapController with WidgetsBindingObserver{
     // Convertir horaSolicitudViaje a String si es necesario
     String solicitudViaje = '';
     if (travelInfo?.horaSolicitudViaje != null) {
-      DateTime solicitudDate = travelInfo!.horaSolicitudViaje!.toDate();
+      DateTime solicitudDate = travelInfo!.horaSolicitudViaje.toDate();
       solicitudViaje = "${solicitudDate.year}-${solicitudDate.month.toString().padLeft(2, '0')}-${solicitudDate.day.toString().padLeft(2, '0')} ${solicitudDate.hour}:${solicitudDate.minute.toString().padLeft(2, '0')}";
     }
 
@@ -1180,13 +1178,14 @@ class TravelMapController with WidgetsBindingObserver{
     // Actualizar el estado local del viaje
     travelInfo?.status = 'finished';
 
-    // Navegar a la página de calificación
-    Navigator.pushNamedAndRemoveUntil(
-        context,
-        'travel_calification_page',
-            (route) => false,
-        arguments: id
-    );
+    if(context.mounted){
+      Navigator.pushNamedAndRemoveUntil(
+          context,
+          'travel_calification_page',
+              (route) => false,
+          arguments: id
+      );
+    }
   }
 
 
