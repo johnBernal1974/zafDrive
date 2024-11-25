@@ -1173,27 +1173,12 @@ class TravelMapController with WidgetsBindingObserver{
   }
 
   void saveTravelHistory() async {
-    // Convertir horaInicioViaje y horaFinalizacionViaje (si es Timestamp) a String
-    String inicioViaje = '';
-    if (travelInfo?.horaInicioViaje != null) {
-      DateTime inicioDate = travelInfo!.horaInicioViaje!.toDate();
-      inicioViaje = "${inicioDate.year}-${inicioDate.month.toString().padLeft(2, '0')}-${inicioDate.day.toString().padLeft(2, '0')} ${inicioDate.hour}:${inicioDate.minute.toString().padLeft(2, '0')}";
-    }
+    // Obtener los valores de las fechas como Timestamp
+    Timestamp? horaInicioViaje = travelInfo?.horaInicioViaje;
+    Timestamp? horaFinalizacionViaje = travelInfo?.horaFinalizacionViaje;
+    Timestamp? horaSolicitudViaje = travelInfo?.horaSolicitudViaje;
 
-    String finalViaje = '';
-    if (travelInfo?.horaFinalizacionViaje != null) {
-      DateTime finalDate = travelInfo!.horaFinalizacionViaje!.toDate();
-      finalViaje = "${finalDate.year}-${finalDate.month.toString().padLeft(2, '0')}-${finalDate.day.toString().padLeft(2, '0')} ${finalDate.hour}:${finalDate.minute.toString().padLeft(2, '0')}";
-    }
-
-    // Convertir horaSolicitudViaje a String si es necesario
-    String solicitudViaje = '';
-    if (travelInfo?.horaSolicitudViaje != null) {
-      DateTime solicitudDate = travelInfo!.horaSolicitudViaje.toDate();
-      solicitudViaje = "${solicitudDate.year}-${solicitudDate.month.toString().padLeft(2, '0')}-${solicitudDate.day.toString().padLeft(2, '0')} ${solicitudDate.hour}:${solicitudDate.minute.toString().padLeft(2, '0')}";
-    }
-
-    // Crear el objeto TravelHistory
+    // Crear el objeto TravelHistory con Timestamps
     TravelHistory travelHistory = TravelHistory(
       id: '',
       idClient: _idTravel!,
@@ -1203,9 +1188,9 @@ class TravelMapController with WidgetsBindingObserver{
       nameDriver: "",
       apellidosDriver: "",
       placa: "",
-      solicitudViaje: solicitudViaje,
-      inicioViaje: inicioViaje,
-      finalViaje: finalViaje,
+      solicitudViaje: horaSolicitudViaje,
+      inicioViaje: horaInicioViaje,
+      finalViaje: horaFinalizacionViaje,
       tarifa: travelInfo?.tarifa ?? 0,
       tarifaDescuento: travelInfo?.tarifaDescuento ?? 0,
       tarifaInicial: travelInfo?.tarifaInicial ?? 0,
@@ -1229,15 +1214,16 @@ class TravelMapController with WidgetsBindingObserver{
     // Actualizar el estado local del viaje
     travelInfo?.status = 'finished';
 
-    if(context.mounted){
+    if (context.mounted) {
       Navigator.pushNamedAndRemoveUntil(
-          context,
-          'travel_calification_page',
-              (route) => false,
-          arguments: id
+        context,
+        'travel_calification_page',
+            (route) => false,
+        arguments: id,
       );
     }
   }
+
 
   void isCloseToPickupPosition(LatLng from, LatLng to) {
     _distanceBetween = Geolocator.distanceBetween(

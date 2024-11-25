@@ -15,7 +15,7 @@ class AntesIniciarController{
   late Function refresh;
   late MyAuthProvider _authProvider;
   late DriverProvider _driverProvider;// ok
-  late StreamSubscription<DocumentSnapshot<Object?>> _driverInfoSuscription;
+  StreamSubscription<DocumentSnapshot<Object?>>? _driverInfoSuscription;
   Driver? driver;
   int saldoRecargaInt = 0;
   GlobalKey<ScaffoldState> key = GlobalKey<ScaffoldState>();
@@ -51,7 +51,7 @@ class AntesIniciarController{
   }
 
   void dispose(){
-    _driverInfoSuscription.cancel();
+    _driverInfoSuscription?.cancel();
     _notificationPermissionCheckTimer?.cancel();
     _notificationPermissionDeniedPermanentlyCheckTimer?.cancel();
     _connectivitySubscription?.cancel();

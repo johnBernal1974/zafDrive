@@ -88,22 +88,27 @@ class LoginController {
       return;
     }
     showSimpleAlertDialog(context, 'Espera un momento ...');
+
     try {
       bool isLoginSuccessful = await _authProvider.login(
           email, password, context);
       if (isLoginSuccessful) {
-        Driver? driver = await _driverProvider.getById(
-            _authProvider.getUser()!.uid);
+        Driver? driver = await _driverProvider.getById(_authProvider.getUser()!.uid);
+
+
         if (driver != null) {
           // Comprobar si el usuario ya está logueado en otro dispositivo
-          bool isLoggedIn = await _driverProvider.checkIfUserIsLoggedIn(
-              driver.id);
+          bool isLoggedIn = await _driverProvider.checkIfUserIsLoggedIn( driver.id);
+          print("*****************isLoggedIn***********$isLoggedIn");
+
           if (isLoggedIn) {
             // Usar una copia local del contexto y verificar si sigue montado
             if (context.mounted) {
               Snackbar.showSnackbar(context, key,
-                  'Este usuario ya está logueado en otro dispositivo.');
+                  'Este usuario ya está logueado en otro dispositivo.'
+              );
             }
+
             return; // No permitir el inicio de sesión
           }
 

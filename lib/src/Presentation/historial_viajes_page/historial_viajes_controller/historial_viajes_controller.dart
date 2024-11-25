@@ -28,5 +28,4 @@ class HistorialViajesController{
   Future<List<TravelHistory>> getAll() async {
     return await _travelHistoryProvider.getByIdClient(_authProvider.getUser()!.uid);
   }
-
 }

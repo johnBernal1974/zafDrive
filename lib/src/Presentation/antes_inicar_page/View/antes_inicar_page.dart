@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
+import 'package:zafiro_conductores/providers/driver_provider.dart';
 import '../../../../Helpers/SnackBar/snackbar.dart';
 import '../../../../Helpers/Validators/FormValidators.dart';
 import '../../../../providers/auth_provider.dart';
@@ -12,6 +14,7 @@ import '../../commons_widgets/headers/header_text/header_text.dart';
 import '../../splash_page/View/splash_page.dart';
 import '../antes_iniciar_controller/antes_iniciar_controller.dart';
 import 'package:zafiro_conductores/Helpers/background_service_manager.dart';
+import 'package:in_app_update/in_app_update.dart';
 
 class AntesIniciarPage extends StatefulWidget {
   const AntesIniciarPage({super.key});
@@ -24,6 +27,7 @@ class _AntesIniciarPageState extends State<AntesIniciarPage> {
   final AntesIniciarController _controller = AntesIniciarController();
   late String formattedSaldo;
   late MyAuthProvider _authProvider;
+  late DriverProvider _driverProvider;
   bool saldoRecarga = false;
   bool isAvisoSinSaldoVisible = false;
   String saldo = "";
@@ -41,7 +45,9 @@ class _AntesIniciarPageState extends State<AntesIniciarPage> {
       _controller.init(context, refresh);
       _controller.requestNotificationPermission();
       _authProvider = MyAuthProvider();
+      _driverProvider = DriverProvider();
       backgroundServiceManager.initializeService();
+      checkForUpdate();
     });
   }
 
@@ -49,6 +55,23 @@ class _AntesIniciarPageState extends State<AntesIniciarPage> {
   void dispose() {
     super.dispose();
     _controller.dispose();
+  }
+
+  Future<void> checkForUpdate() async {
+    try {
+      AppUpdateInfo updateInfo = await InAppUpdate.checkForUpdate();
+      if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
+        await InAppUpdate.performImmediateUpdate();
+      } else {
+        if (kDebugMode) {
+          print('***********************No hay actualizaciones disponibles.****************');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('***************Error al verificar actualizaciones: $e');
+      }
+    }
   }
 
   @override
@@ -161,7 +184,7 @@ class _AntesIniciarPageState extends State<AntesIniciarPage> {
   }
 
   void refresh() {
-    if(context.mounted){
+    if(mounted){
       setState(() {});
     }
   }
@@ -189,9 +212,18 @@ class _AntesIniciarPageState extends State<AntesIniciarPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton(
-                    onPressed: () {
-                      _authProvider.signOut();
-                      Navigator.pushReplacement(context, PageRouteBuilder(pageBuilder: (_, __, ___) => const SplashPage()));
+                    onPressed: () async {
+                      final userId = _authProvider.getUser()?.uid;
+                      if (userId != null) {
+                        await _driverProvider.updateLoginStatus(userId, false);
+                      }
+                      await _authProvider.signOut();
+                      if(context.mounted){
+                        Navigator.pushReplacement(
+                          context,
+                          PageRouteBuilder(pageBuilder: (_, __, ___) => const SplashPage()),
+                        );
+                      }
                     },
                     child: const Text(
                       'Sí',

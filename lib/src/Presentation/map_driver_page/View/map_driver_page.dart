@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:zafiro_conductores/providers/driver_provider.dart';
 import 'package:zafiro_conductores/src/Presentation/splash_page/View/splash_page.dart';
 import 'dart:async';
 import '../../../../Helpers/Validators/FormValidators.dart';
@@ -32,6 +33,7 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
 
   final DriverMapController _controller = DriverMapController();
   late MyAuthProvider _authProvider;
+  late DriverProvider _driverProvider;
   String? formattedSaldo;
   Timer? _batteryOptimizationCheckTimer;
   Timer? _locationDeniedPermanentlyTimer;
@@ -51,6 +53,7 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
     });
     WidgetsBinding.instance.addObserver(this);
     _authProvider = MyAuthProvider();
+    _driverProvider = DriverProvider();
     requestLocationPermission();
     _fetchData();
     _controller.obtenerRol();
@@ -792,9 +795,13 @@ class _MapDriverPageState extends State<MapDriverPage>  with WidgetsBindingObser
                       // Verificar la conexión a Internet
                       bool hasConnection = await connectionService.hasInternetConnection();
                       if (hasConnection) {
+                        final userId = _authProvider.getUser()?.uid;
+                        if (userId != null) {
+                          await _driverProvider.updateLoginStatus(userId, false);
+                        }
+                        _controller.disconnect();
+                        _authProvider.signOut();
                         if (currentContext.mounted) {
-                          _authProvider.signOut();
-                          _controller.disconnect();
                           Navigator.pushReplacement(context,
                               PageRouteBuilder(pageBuilder: (_, __, ___) => const SplashPage()));
                         }

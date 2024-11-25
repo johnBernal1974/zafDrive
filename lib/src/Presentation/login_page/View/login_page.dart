@@ -25,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _controller = LoginController();
-    checkIfUserIsLoggedLoginPage();
+    //checkIfUserIsLoggedLoginPage();
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
       _controller.init(context);
     });
@@ -232,14 +232,17 @@ class _LoginPageState extends State<LoginPage> {
    );
  }
 
- void checkIfUserIsLoggedLoginPage(){
-   FirebaseAuth.instance.authStateChanges().listen((User? user) {
-     if(user != null){
-       print("**********el usuario ya esta logueado, pasa a antes de iniciar");
-       Navigator.pushNamedAndRemoveUntil(context, "antes_iniciar", (route) => false);
-     }
-   });
- }
+ // void checkIfUserIsLoggedLoginPage(){
+ //   FirebaseAuth.instance.authStateChanges().listen((User? user) {
+ //     if(user != null){
+ //       print("**********el usuario ya esta logueado, pasa a antes de iniciar");
+ //       if(mounted){
+ //         Navigator.pushNamedAndRemoveUntil(context, "antes_iniciar", (route) => false);
+ //       }
+ //
+ //     }
+ //   });
+ // }
 
   Widget _emailImput() {
     return TextField(

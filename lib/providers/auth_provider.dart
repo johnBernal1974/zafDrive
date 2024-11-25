@@ -295,13 +295,13 @@ class MyAuthProvider {
   }
 
 
-  void checkIfUserIsLoggedLoginPage(BuildContext context){
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if(user != null){
-        Navigator.pushNamedAndRemoveUntil(context, "antes_iniciar", (route) => false);
-      }
-    });
-  }
+  // void checkIfUserIsLoggedLoginPage(BuildContext context){
+  //   FirebaseAuth.instance.authStateChanges().listen((User? user) {
+  //     if(user != null){
+  //       Navigator.pushNamedAndRemoveUntil(context, "antes_iniciar", (route) => false);
+  //     }
+  //   });
+  // }
 
   Future<bool> signUp(String email, String password) async {
     String? errorMessage;
@@ -321,11 +321,14 @@ class MyAuthProvider {
   Future<void> signOut() async {
     String? userId = _firebaseAuth.currentUser?.uid;
     if (userId != null) {
-      // Actualizar el estado de inicio de sesión a false en Firestore
-      await _driverProvider.updateLoginStatus(userId, false);
+      await _firebaseAuth.signOut();
     }
-    // Cerrar sesión en Firebase Auth
-    await _firebaseAuth.signOut();
+  }
+
+  Future<bool> isUserLoggedIn() async {
+    // Si usas Firebase Authentication
+    var user = FirebaseAuth.instance.currentUser;
+    return user != null;
   }
 
 }

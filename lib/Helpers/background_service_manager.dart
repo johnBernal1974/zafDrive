@@ -42,11 +42,6 @@ class BackgroundServiceManager {
     }
   }
 
-
-
-
-
-
   // Verificar si el servicio está activo
   Future<bool> isServiceRunning() async {
     return await _service.isRunning();
