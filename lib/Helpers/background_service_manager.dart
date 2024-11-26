@@ -53,20 +53,19 @@ Future<void> onStart(ServiceInstance service) async {
   if (service is AndroidServiceInstance) {
     service.setAsForegroundService();
     service.setForegroundNotificationInfo(
-      title: "Actualizando tu ubicación",
-      content: "El servicio de ubicación está activo en segundo plano.",
+      title: "Servicio de ubicación activo",
+      content: "Actualizando tu ubicación en segundo plano.",
     );
   }
 
-  // Escuchar los eventos de la app
   service.on("stopService").listen((event) {
-    print("Evento recibido: $event");
-    service.stopSelf();  // Detener el servicio
-    print("Servicio detenido.");
+    service.stopSelf();
+  });
+
+  Geolocator.getPositionStream().listen((Position position) {
+    print("**********************Nueva posición: ${position.latitude}, ${position.longitude}");
   });
 }
-
-
 
 
 // Función para iOS (en caso de usarlo)
