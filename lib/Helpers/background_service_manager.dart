@@ -22,6 +22,7 @@ class BackgroundServiceManager {
   }
 
   // Iniciar el servicio
+
   Future<void> startService() async {
     if (!await _service.isRunning()) {
       await _service.startService();
@@ -49,6 +50,7 @@ class BackgroundServiceManager {
 }
 
 // Función para ejecutar cuando se inicia el servicio
+@pragma('vm:entry-point')
 Future<void> onStart(ServiceInstance service) async {
   if (service is AndroidServiceInstance) {
     service.setAsForegroundService();
@@ -62,11 +64,11 @@ Future<void> onStart(ServiceInstance service) async {
     service.stopSelf();
   });
 
-  Geolocator.getPositionStream().listen((Position position) {
-    if (kDebugMode) {
-      print("**********************Nueva posición: ${position.latitude}, ${position.longitude}");
-    }
-  });
+  // Geolocator.getPositionStream().listen((Position position) {
+  //   if (kDebugMode) {
+  //     print("**********************Nueva posición: ${position.latitude}, ${position.longitude}");
+  //   }
+  // });
 }
 
 
