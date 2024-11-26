@@ -98,7 +98,7 @@ class _TravelMapPageState extends State<TravelMapPage> {
     } else if (_controller.travelInfo?.status == 'started') {
       mapHeight = MediaQuery.of(context).size.height * 0.70; // 70% de la altura para el estado 'started'
     } else {
-      mapHeight = MediaQuery.of(context).size.height * 0.70;
+      mapHeight = MediaQuery.of(context).size.height * 0.64;
     }
     return SizedBox(
       height: mapHeight,
@@ -123,7 +123,7 @@ class _TravelMapPageState extends State<TravelMapPage> {
       containerHeight = MediaQuery.of(context).size.height * 0.30; // Ajusta este valor según lo necesario
     }
     else {
-      containerHeight = MediaQuery.of(context).size.height * 0.30;
+      containerHeight = MediaQuery.of(context).size.height * 0.36;
     }
     return Stack(
       children: [
@@ -169,18 +169,53 @@ class _TravelMapPageState extends State<TravelMapPage> {
                   ),
                   child: Container(
                     margin: const EdgeInsets.only(left: 20),
-                    child: Row(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start, // Alineación a la izquierda
                       children: [
-                        const Text(
-                          'VALOR DEL VIAJE',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
-                            color: blanco,
-                          ),
+                        Row(
+                          children: [
+                            const Text(
+                              'VALOR DEL VIAJE',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                                color: blanco,
+                              ),
+                            ),
+                            const Spacer(),
+                            _infoTarifa()
+                          ],
                         ),
-                        const Spacer(),
-                        _infoTarifa()
+                        if (_controller.travelInfo?.status == 'driver_is_waiting' ||
+                            _controller.travelInfo?.status == 'accepted' ||
+                            _controller.travelInfo?.status == 'driver_on_the_way')
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start, // Alineación a la izquierda
+                            children: [
+                              const Text(
+                                'Apuntes del usuario:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                  color: blanco
+                                ),
+                              ),
+                              Text(
+                                _controller.travelInfo?.apuntes?.isNotEmpty == true
+                                    ? _controller.travelInfo!.apuntes!
+                                    : 'El usuario no hizo apuntes para éste viaje.',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 13,
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,  // Esto evitará que el texto se salga de las 3 líneas, mostrando "..." al final
+                              ),
+
+                            ],
+                          ),
                       ],
                     ),
                   ),

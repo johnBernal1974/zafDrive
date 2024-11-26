@@ -63,7 +63,9 @@ Future<void> onStart(ServiceInstance service) async {
   });
 
   Geolocator.getPositionStream().listen((Position position) {
-    print("**********************Nueva posición: ${position.latitude}, ${position.longitude}");
+    if (kDebugMode) {
+      print("**********************Nueva posición: ${position.latitude}, ${position.longitude}");
+    }
   });
 }
 

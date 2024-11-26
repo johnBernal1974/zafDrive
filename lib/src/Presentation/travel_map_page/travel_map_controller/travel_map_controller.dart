@@ -466,13 +466,18 @@ class TravelMapController with WidgetsBindingObserver{
 
   Widget notifyClientButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: (_distanceBetween != null && _distanceBetween! <= 200) ? () {
+      onPressed: (_distanceBetween != null && _distanceBetween! <= 200)
+          ? () {
         // Validar conexión a Internet antes de notificar al cliente
         _checkInternetConnectionAndExecute(context, () {
           driverisWaiting();
           startTimer();
+
+          // Mostrar el BottomSheet después de la notificación
+          _showInformationBottomSheet(context);
         });
-      } : () {
+      }
+          : () {
         // Mostrar alerta cuando la distancia es mayor a 200 o _distanceBetween es nulo
         showDialog(
           context: context,
@@ -496,7 +501,9 @@ class TravelMapController with WidgetsBindingObserver{
         backgroundColor: MaterialStateProperty.resolveWith<Color>(
               (Set<MaterialState> states) {
             // Cambiar el color del botón cuando está deshabilitado
-            return (_distanceBetween != null && _distanceBetween! <= 200) ? primary : Colors.grey; // Color de fondo si está habilitado o deshabilitado
+            return (_distanceBetween != null && _distanceBetween! <= 200)
+                ? primary
+                : Colors.grey; // Color de fondo si está habilitado o deshabilitado
           },
         ),
       ),
@@ -519,6 +526,60 @@ class TravelMapController with WidgetsBindingObserver{
           ),
         ],
       ),
+    );
+  }
+
+  void _showInformationBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Imagen añadida al principio
+              Image.asset(
+                'assets/images/peaje2.png',  // Ruta de la imagen
+                height: 100,  // Ajusta el tamaño de la imagen según sea necesario
+                width: 100,
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Información importante",
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Los peajes que lleguen a existir en la ruta deben ser pagados por el cliente, ya que no están incluidos en la tarifa. De ello ya está informado el usuario.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);  // Cerrar el BottomSheet
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primary,  // Cambiar el color de fondo a azul
+                ),
+                child: const Text(
+                  "Cerrar",
+                  style: TextStyle(
+                      color: blanco
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
