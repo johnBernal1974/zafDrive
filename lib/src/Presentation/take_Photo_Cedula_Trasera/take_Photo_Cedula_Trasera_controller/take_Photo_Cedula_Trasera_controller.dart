@@ -109,7 +109,7 @@ class TakePhotoCedulaTraseraController {
   }
 
   void verificarTarjetaPropiedadDelantera(){
-    _authProvider.verificarFotosTarjetaPropiedadDelantera(context);
+    _authProvider.verificarFotos(context);
   }
 
   void takePicture() async {

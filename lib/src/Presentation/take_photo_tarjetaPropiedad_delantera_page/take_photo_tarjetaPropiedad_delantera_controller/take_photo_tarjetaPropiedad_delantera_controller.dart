@@ -69,7 +69,7 @@ class TakePhotoTarjetaPropiedadDelanteraController {
   }
 
   void verificarTarjetaPropiedadTrasera(){
-    _authProvider.verificarFotosTarjetaPropiedadTrasera(context);
+    _authProvider.verificarFotos(context);
   }
 
   void showSimpleProgressDialog(BuildContext context, String message) {

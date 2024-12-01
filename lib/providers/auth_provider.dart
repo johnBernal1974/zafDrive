@@ -145,163 +145,64 @@ class MyAuthProvider {
     });
   }
 
-  void verificarFotosCedulaDelantera(BuildContext? context) {
-    // Asegurarse de que el contexto no sea nulo antes de proceder
+  void verificarFotos(BuildContext? context) {
     if (context == null) {
       if (kDebugMode) {
         print('El contexto es nulo');
       }
-      return; // Salir del método si el contexto es nulo
+      return;
     }
 
-    // Si el contexto es válido, procedemos con la lógica
     FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-      if (user != null) {
-        DriverProvider driverProvider = DriverProvider();
-
-        // Verificar si la foto de la cédula delantera ha sido verificada
-        String? fotoCedulaDelanteraVerificada = await driverProvider.verificarFotoCedulaDelantera();
-
-        // Verificar si la foto está verificada o rechazada
-        if (fotoCedulaDelanteraVerificada == "" || fotoCedulaDelanteraVerificada == "rechazada") {
-          // Solo navegar si el contexto está montado
-          if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, 'take_photo_cedula_delantera_page', (route) => false);
-          }
-        } else {
-          // Si la foto ya está verificada, navegar a la página siguiente
-          if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, 'take_photo_cedula_trasera_page', (route) => false);
-          }
-        }
-      } else {
-        // Si el usuario no está autenticado, navegar a la página de login
+      if (user == null) {
+        // Usuario no autenticado
         if (context.mounted) {
           Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
         }
+        return;
+      }
+
+      DriverProvider driverProvider = DriverProvider();
+
+      // Lista de validaciones de fotos y páginas correspondientes
+      List<Map<String, dynamic>> fotos = [
+        {
+          'verificar': driverProvider.verificarFotoCedulaDelantera,
+          'pagina': 'take_photo_cedula_delantera_page',
+        },
+        {
+          'verificar': driverProvider.verificarFotoCedulaTrasera,
+          'pagina': 'take_photo_cedula_trasera_page',
+        },
+        {
+          'verificar': driverProvider.verificarFotoTarjetaPropiedadDelantera,
+          'pagina': 'take_photo_tarjeta_propiedad_delantera_page',
+        },
+        {
+          'verificar': driverProvider.verificarFotoTarjetaPropiedadTrasera,
+          'pagina': 'take_photo_tarjeta_propiedad_trasera_page',
+        },
+      ];
+
+      for (var foto in fotos) {
+        String? estadoFoto = await foto['verificar']();
+
+        if (estadoFoto == "" || estadoFoto == "rechazada") {
+          // Navegar a la página correspondiente
+          if (context.mounted) {
+            Navigator.pushNamedAndRemoveUntil(context, foto['pagina'], (route) => false);
+          }
+          return; // Salir del bucle después de enviar al usuario a corregir la foto
+        }
+      }
+
+      // Si todas las fotos están aprobadas, navegar a la página de verificación
+      if (context.mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, 'verifying_identity', (route) => false);
       }
     });
   }
 
-
-  void verificarFotosCedulaTrasera(BuildContext? context) {
-    // Asegurarse de que el contexto no sea nulo antes de proceder
-    if (context == null) {
-      if (kDebugMode) {
-        print('El contexto es nulo');
-      }
-      return; // Salir del método si el contexto es nulo
-    }
-
-    // Si el contexto es válido, procedemos con la lógica
-    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-      if (user != null) {
-        DriverProvider driverProvider = DriverProvider();
-        String? fotoCedulaTraseraVerificada = await driverProvider.verificarFotoCedulaTrasera();
-
-        // Verificar si la foto está verificada o rechazada
-        if (fotoCedulaTraseraVerificada == "" || fotoCedulaTraseraVerificada == "rechazada") {
-          // Solo navegar si el contexto está montado
-          if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, 'take_photo_cedula_trasera_page', (route) => false);
-          }
-        } else {
-          // Si la foto ya está verificada, navegar a la página de verificación de identidad
-          if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, 'verifying_identity', (route) => false);
-          }
-        }
-      } else {
-        // Si el usuario no está autenticado, navegar a la página de login
-        if (context.mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
-        }
-      }
-    });
-  }
-
-
-  void verificarFotosTarjetaPropiedadDelantera(BuildContext? context) {
-    // Asegurarse de que el contexto no sea nulo antes de proceder
-    if (context == null) {
-      if (kDebugMode) {
-        print('El contexto es nulo');
-      }
-      return; // Salir del método si el contexto es nulo
-    }
-
-    // Si el contexto es válido, procedemos con la lógica
-    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-      if (user != null) {
-        DriverProvider driverProvider = DriverProvider();
-        String? fotoTarjetaPropiedadDelanteraVerificada = await driverProvider.verificarFotoTarjetaPropiedadDelantera();
-
-        // Verificar si la foto está verificada o rechazada
-        if (fotoTarjetaPropiedadDelanteraVerificada == "" || fotoTarjetaPropiedadDelanteraVerificada == "rechazada") {
-          // Solo navegar si el contexto está montado
-          if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, 'take_photo_tarjeta_propiedad_delantera_page', (route) => false);
-          }
-        } else {
-          // Si la foto ya está verificada, navegar a la página de la foto trasera
-          if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, 'take_photo_tarjeta_propiedad_trasera_page', (route) => false);
-          }
-        }
-      } else {
-        // Si el usuario no está autenticado, navegar a la página de login
-        if (context.mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
-        }
-      }
-    });
-  }
-
-
-  void verificarFotosTarjetaPropiedadTrasera(BuildContext? context) {
-    // Asegurarse de que el contexto no sea nulo antes de proceder
-    if (context == null) {
-      if (kDebugMode) {
-        print('El contexto es nulo');
-      }
-      return; // Salir del método si el contexto es nulo
-    }
-
-    // Si el contexto es válido, procedemos con la lógica
-    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-      if (user != null) {
-        DriverProvider driverProvider = DriverProvider();
-        String? fotoTarjetaPropiedadTraseraVerificada = await driverProvider.verificarFotoTarjetaPropiedadTrasera();
-
-        // Verificar si la foto está verificada o rechazada
-        if (fotoTarjetaPropiedadTraseraVerificada == "" || fotoTarjetaPropiedadTraseraVerificada == "rechazada") {
-          // Solo navegar si el contexto está montado
-          if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, 'take_photo_tarjeta_propiedad_trasera_page', (route) => false);
-          }
-        } else {
-          // Si la foto ya está verificada, navegar a la página de verificación de identidad
-          if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, 'verifying_identity', (route) => false);
-          }
-        }
-      } else {
-        // Si el usuario no está autenticado, navegar a la página de login
-        if (context.mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
-        }
-      }
-    });
-  }
-
-
-  // void checkIfUserIsLoggedLoginPage(BuildContext context){
-  //   FirebaseAuth.instance.authStateChanges().listen((User? user) {
-  //     if(user != null){
-  //       Navigator.pushNamedAndRemoveUntil(context, "antes_iniciar", (route) => false);
-  //     }
-  //   });
-  // }
 
   Future<bool> signUp(String email, String password) async {
     String? errorMessage;

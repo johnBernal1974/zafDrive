@@ -67,7 +67,7 @@ class TakePhotoCedulaDelanteraController {
   }
 
   void verificarCedulaTrasera(){
-    _authProvider.verificarFotosCedulaTrasera(context);
+    _authProvider.verificarFotos(context);
   }
 
   void showSimpleProgressDialog(BuildContext context, String message) {

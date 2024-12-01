@@ -48,7 +48,7 @@ class TakeFotoController{
         // Ocultar el progreso una vez que se haya cargado en Firebase
         if(context.mounted){
           closeSimpleProgressDialog(context);
-          _authProvider.verificarFotosCedulaDelantera(context);
+          _authProvider.verificarFotos(context);
         }
       } catch (e) {
         if (kDebugMode) {
